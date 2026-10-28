@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TranSim — Simulador de transistores</title>
+  <meta name="description" content="Simulación interactiva de la juntura PN, el MOSFET, el BJT y el inversor CMOS: cortes con portadores en movimiento, curvas características, regiones de operación y diagramas de bandas.">
+  <link rel="stylesheet" href="css/style.css?v=5">
+</head>
+<body>
+<header class="top">
+  <h1>Tran<span>Sim</span></h1>
+  <nav class="tabs">
+    <button data-tab="pn">Juntura PN</button>
+    <button data-tab="mosfet">MOSFET</button>
+    <button data-tab="bjt">BJT</button>
+    <button data-tab="cmos">CMOS</button>
+  </nav>
+  <div class="legend-bar">
+    <span><i style="background:var(--electron)"></i>electrones</span>
+    <span><i style="background:var(--hole)"></i>huecos</span>
+    <span><i style="background:#1f3558;border-radius:2px"></i>tipo n</span>
+    <span><i style="background:#4a2433;border-radius:2px"></i>tipo p</span>
+    <span><i style="background:#2a2d38;border-radius:2px;border:1px solid #555"></i>zona de vaciamiento</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ============================================================ PN -->
+<section class="tab" id="tab-pn">
+  <aside class="controls">
+    <h2>Juntura PN</h2>
+    <p class="sub">N<sub>A</sub> = 10¹⁶ cm⁻³ (p), N<sub>D</sub> = 5·10¹⁶ cm⁻³ (n). Ánodo en el lado p.</p>
+    <div class="ctrl"><label>V<sub>A</sub> (polarización) <b data-out="Va"></b></label>
+      <input type="range" data-key="Va" min="-5" max="0.8" step="0.005" data-unit="V"></div>
+    <div class="ctrl check"><label><input type="checkbox" data-key="logI"> Corriente en escala log</label></div>
+    <div class="ctrl"><label>Velocidad de animación <b data-out="speed"></b></label>
+      <input type="range" data-key="speed" min="0.1" max="3" step="0.1" data-fmt="1" data-unit="×"></div>
+    <span class="region-badge" id="pn-badge"></span>
+    <h3>Valores</h3>
+    <table class="readout" id="pn-read"></table>
+    <h3>Teoría</h3>
+    <div class="theory">
+      <span class="eq">V_bi = U_T ln(N_A N_D / n_i²)
+W = √(2ε(V_bi − V_A)(1/N_A + 1/N_D)/q)
+I = I_S (e^(V_A/U_T) − 1)</span>
+      <ul>
+        <li><b>Directa</b>: baja la barrera, mayoritarios se inyectan y se recombinan como minoritarios (difusión).</li>
+        <li><b>Inversa</b>: la barrera crece, la zona de vaciamiento se ensancha y sólo circula la corriente de generación/saturación.</li>
+        <li>La separación E<sub>Fn</sub>−E<sub>Fp</sub> en la juntura vale qV<sub>A</sub>.</li>
+      </ul>
+    </div>
+  </aside>
+  <div class="viz">
+    <div class="card"><div class="card-title">Corte de la juntura <small>iones fijos (±) en la zona de vaciamiento · portadores inyectados y generados</small></div>
+      <canvas class="xsec" id="pn-xsec" style="height:300px"></canvas></div>
+    <div class="grid2">
+      <div class="card"><div class="card-title">Diagrama de bandas</div><canvas class="plot" id="pn-band"></canvas></div>
+      <div class="card"><div class="card-title">Característica I–V</div><canvas class="plot" id="pn-iv"></canvas></div>
+    </div>
+    <div class="grid3">
+      <div class="card"><div class="card-title">Densidad de carga ρ(x)</div><canvas class="plot short" id="pn-rho"></canvas></div>
+      <div class="card"><div class="card-title">Campo eléctrico E(x)</div><canvas class="plot short" id="pn-field"></canvas></div>
+      <div class="card"><div class="card-title">Potencial ψ(x)</div><canvas class="plot short" id="pn-pot"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ MOSFET -->
+<section class="tab" id="tab-mosfet">
+  <aside class="controls">
+    <h2>MOSFET canal n</h2>
+    <p class="sub">Sustrato p (N<sub>A</sub> = 10¹⁷ cm⁻³), t<sub>ox</sub> = 10 nm, V<sub>T0</sub> = 0.7 V.</p>
+    <div class="ctrl"><label>V<sub>GS</sub> <b data-out="Vgs"></b></label>
+      <input type="range" data-key="Vgs" min="-1.5" max="5" step="0.01" data-unit="V"></div>
+    <div class="ctrl"><label>V<sub>DS</sub> <b data-out="Vds"></b></label>
+      <input type="range" data-key="Vds" min="0" max="5" step="0.01" data-unit="V"></div>
+    <div class="ctrl"><label>V<sub>SB</sub> (efecto cuerpo) <b data-out="Vsb"></b></label>
+      <input type="range" data-key="Vsb" min="0" max="3" step="0.01" data-unit="V"></div>
+    <h3>Parámetros</h3>
+    <div class="ctrl"><label>W/L <b data-out="WL"></b></label>
+      <input type="range" data-key="WL" min="1" max="20" step="0.5" data-fmt="1"></div>
+    <div class="ctrl"><label>λ (modulación de canal) <b data-out="lambda"></b></label>
+      <input type="range" data-key="lambda" min="0" max="0.2" step="0.005" data-fmt="3" data-unit="V⁻¹"></div>
+    <div class="ctrl"><label>Posición del corte vertical x/L <b data-out="cut"></b></label>
+      <input type="range" data-key="cut" min="0" max="1" step="0.01"></div>
+    <div class="ctrl check"><label><input type="checkbox" data-key="logT"> Transferencia en escala log</label></div>
+    <div class="ctrl"><label>Velocidad de animación <b data-out="speed"></b></label>
+      <input type="range" data-key="speed" min="0.1" max="3" step="0.1" data-fmt="1" data-unit="×"></div>
+    <span class="region-badge" id="mos-badge"></span>
+    <h3>Punto de operación</h3>
+    <table class="readout" id="mos-read"></table>
+    <h3>Teoría</h3>
+    <div class="theory">
+      <span class="eq">V_T = V_FB + 2φ_F + γ√(2φ_F + V_SB)
+Triodo:  I_D = β[(V_GS−V_T)V_DS − n V_DS²/2]
+Sat.:    I_D = β(V_GS−V_T)²/(2n) · (1+λV_DS)
+V_DS,sat = (V_GS − V_T)/n</span>
+      <ul>
+        <li><b>Corte / subumbral</b>: V<sub>GS</sub> &lt; V<sub>T</sub>, corriente de difusión exponencial.</li>
+        <li><b>Triodo</b>: canal continuo de S a D, se comporta como resistencia controlada.</li>
+        <li><b>Saturación</b>: el canal se estrangula (pinch-off) cerca del drenador; los electrones cruzan la zona de vaciamiento arrastrados por el campo.</li>
+        <li>La velocidad de los electrones en el canal es v = I<sub>D</sub>/(W·Q<sub>i</sub>): aceleran donde la carga disminuye.</li>
+      </ul>
+      Modelo continuo tipo EKV (vale en subumbral y en inversión fuerte).
+    </div>
+  </aside>
+  <div class="viz">
+    <div class="card"><div class="card-title">Corte transversal <small>línea amarilla = corte vertical · línea celeste = corte lateral en superficie</small></div>
+      <canvas class="xsec" id="mos-xsec"></canvas></div>
+    <div class="grid2">
+      <div class="card"><div class="card-title">Característica de salida I<sub>D</sub>–V<sub>DS</sub></div><canvas class="plot" id="mos-out"></canvas></div>
+      <div class="card"><div class="card-title">Transferencia I<sub>D</sub>–V<sub>GS</sub></div><canvas class="plot" id="mos-tr"></canvas></div>
+      <div class="card"><div class="card-title">Bandas — corte vertical (compuerta → sustrato)</div><canvas class="plot" id="mos-bandv"></canvas></div>
+      <div class="card"><div class="card-title">Bandas — corte lateral en superficie (fuente → drenador)</div><canvas class="plot" id="mos-bandl"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ BJT -->
+<section class="tab" id="tab-bjt">
+  <aside class="controls">
+    <h2>BJT NPN</h2>
+    <p class="sub">N<sub>E</sub> = 10¹⁹, N<sub>B</sub> = 10¹⁷, N<sub>C</sub> = 10¹⁶ cm⁻³. Emisor a masa.</p>
+    <div class="ctrl"><label>V<sub>BE</sub> <b data-out="Vbe"></b></label>
+      <input type="range" data-key="Vbe" min="-0.6" max="0.85" step="0.002" data-fmt="3" data-unit="V"></div>
+    <div class="ctrl"><label>V<sub>CE</sub> <b data-out="Vce"></b></label>
+      <input type="range" data-key="Vce" min="-1" max="10" step="0.01" data-unit="V"></div>
+    <div class="btn-row" id="bjt-presets">
+      <button data-p="cut">Corte</button><button data-p="act">Activa</button><button data-p="sat">Saturación</button><button data-p="inv">Inversa</button>
+    </div>
+    <h3>Parámetros</h3>
+    <div class="ctrl"><label>β<sub>F</sub> <b data-out="betaF"></b></label>
+      <input type="range" data-key="betaF" min="10" max="400" step="5" data-fmt="0"></div>
+    <div class="ctrl"><label>Tensión de Early V<sub>A</sub> <b data-out="VA"></b></label>
+      <input type="range" data-key="VA" min="10" max="200" step="1" data-fmt="0" data-unit="V"></div>
+    <div class="ctrl"><label>Vista del corte</label>
+      <select data-key="view"><option value="1d">Estructura intrínseca 1D</option><option value="planar">Corte planar (integrado)</option></select></div>
+    <div class="ctrl"><label>Velocidad de animación <b data-out="speed"></b></label>
+      <input type="range" data-key="speed" min="0.1" max="3" step="0.1" data-fmt="1" data-unit="×"></div>
+    <span class="region-badge" id="bjt-badge"></span>
+    <h3>Punto de operación</h3>
+    <table class="readout" id="bjt-read"></table>
+    <h3>Teoría</h3>
+    <div class="theory">
+      <span class="eq">Ebers–Moll (transporte):
+I_C = I_S(e^(V_BE/U_T) − e^(V_BC/U_T))(1 − V_BC/V_A) − (I_S/β_R)(e^(V_BC/U_T) − 1)
+I_B = (I_S/β_F)(e^(V_BE/U_T) − 1) + (I_S/β_R)(e^(V_BC/U_T) − 1)</span>
+      <ul>
+        <li><b>Activa directa</b>: BE directa, BC inversa. Los electrones inyectados por el emisor difunden por la base y el campo de la juntura BC los barre al colector.</li>
+        <li><b>Saturación</b>: ambas junturas en directa, el colector también inyecta; el perfil de minoritarios en la base se "levanta" del lado del colector.</li>
+        <li><b>Corte</b>: ambas en inversa.</li>
+        <li><b>Efecto Early</b>: al crecer |V<sub>BC</sub>| la zona de vaciamiento BC se come la base, W<sub>B</sub> baja y el gradiente (I<sub>C</sub>) sube.</li>
+      </ul>
+    </div>
+  </aside>
+  <div class="viz">
+    <div class="card"><div class="card-title">Corte transversal <small id="bjt-xsec-sub">flashes = recombinación en la base</small></div>
+      <canvas class="xsec" id="bjt-xsec"></canvas></div>
+    <div class="grid2">
+      <div class="card"><div class="card-title">Característica de salida I<sub>C</sub>–V<sub>CE</sub></div><canvas class="plot" id="bjt-out"></canvas></div>
+      <div class="card"><div class="card-title">Gummel: I<sub>C</sub>, I<sub>B</sub> vs V<sub>BE</sub></div><canvas class="plot" id="bjt-gum"></canvas></div>
+      <div class="card"><div class="card-title">Diagrama de bandas E → B → C</div><canvas class="plot" id="bjt-band"></canvas></div>
+      <div class="card"><div class="card-title">Concentración de minoritarios</div><canvas class="plot" id="bjt-min"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CMOS -->
+<section class="tab" id="tab-cmos">
+  <aside class="controls">
+    <h2>Inversor CMOS</h2>
+    <p class="sub">NMOS en sustrato p + PMOS en pozo n. Compuertas unidas a V<sub>in</sub>, drenadores a V<sub>out</sub>.</p>
+    <div class="ctrl"><label>Modo</label>
+      <select data-key="mode"><option value="static">Estático (barrido DC)</option><option value="square">Dinámico: onda cuadrada</option><option value="sine">Dinámico: senoidal</option></select></div>
+    <div class="ctrl" id="cmos-vin-ctrl"><label>V<sub>in</sub> <b data-out="Vin"></b></label>
+      <input type="range" data-key="Vin" min="0" max="5" step="0.01" data-unit="V"></div>
+    <div class="ctrl"><label>V<sub>DD</sub> <b data-out="VDD"></b></label>
+      <input type="range" data-key="VDD" min="1.2" max="5" step="0.05" data-unit="V"></div>
+    <div class="ctrl"><label>(W/L)<sub>p</sub> / (W/L)<sub>n</sub> <b data-out="ratio"></b></label>
+      <input type="range" data-key="ratio" min="0.5" max="6" step="0.1" data-fmt="1"></div>
+    <div class="ctrl"><label>Frecuencia (tiempo ralentizado) <b data-out="freq"></b></label>
+      <input type="range" data-key="freq" min="0.05" max="1" step="0.01" data-unit="Hz"></div>
+    <div class="ctrl"><label>Carga C<sub>L</sub> (relativa) <b data-out="CL"></b></label>
+      <input type="range" data-key="CL" min="0.2" max="4" step="0.1" data-fmt="1"></div>
+    <div class="ctrl"><label>Velocidad de animación <b data-out="speed"></b></label>
+      <input type="range" data-key="speed" min="0.1" max="3" step="0.1" data-fmt="1" data-unit="×"></div>
+    <span class="region-badge" id="cmos-badge"></span>
+    <h3>Punto de operación</h3>
+    <table class="readout" id="cmos-read"></table>
+    <h3>Teoría</h3>
+    <div class="theory">
+      <span class="eq">I_Dn(V_in, V_out) = I_Dp(V_DD − V_in, V_DD − V_out)
+NM_H = V_OH − V_IH,  NM_L = V_IL − V_OL
+(dV_out/dV_in = −1 en V_IL y V_IH)</span>
+      <ul>
+        <li>En reposo siempre hay un transistor cortado: <b>no hay consumo estático</b>.</li>
+        <li>Sólo cerca de V<sub>M</sub> ambos conducen y circula corriente de cortocircuito.</li>
+        <li>En modo dinámico el PMOS carga C<sub>L</sub> (huecos) y el NMOS la descarga (electrones).</li>
+        <li>Aumentar (W/L)<sub>p</sub> mueve V<sub>M</sub> hacia V<sub>DD</sub>.</li>
+      </ul>
+    </div>
+  </aside>
+  <div class="viz">
+    <div class="card"><div class="card-title">Corte transversal del inversor <small>pozo n polarizado a V<sub>DD</sub>, sustrato p a GND</small></div>
+      <canvas class="xsec" id="cmos-xsec" style="height:420px"></canvas></div>
+    <div class="grid2">
+      <div class="card"><div class="card-title">Transferencia V<sub>out</sub>–V<sub>in</sub> (regiones de operación)</div><canvas class="plot" id="cmos-vtc"></canvas></div>
+      <div class="card"><div class="card-title">Rectas de carga: I<sub>Dn</sub> e I<sub>Dp</sub> vs V<sub>out</sub></div><canvas class="plot" id="cmos-load"></canvas></div>
+      <div class="card"><div class="card-title" id="cmos-third-title">Corriente de alimentación vs V<sub>in</sub></div><canvas class="plot" id="cmos-cur"></canvas></div>
+      <div class="card"><div class="card-title">Bandas bajo las compuertas (NMOS | PMOS)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><canvas class="plot" id="cmos-bandn"></canvas><canvas class="plot" id="cmos-bandp"></canvas></div></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>TranSim · Teoría de Circuitos II · modelos didácticos (EKV, Ebers–Moll, aproximación de vaciamiento). <a href="https://github.com/TC-II/TranSim">Código fuente</a></footer>
+
+<script src="js/common.js?v=5"></script>
+<script src="js/mosband.js?v=5"></script>
+<script src="js/pn.js?v=5"></script>
+<script src="js/mosfet.js?v=5"></script>
+<script src="js/bjt.js?v=5"></script>
+<script src="js/cmos.js?v=5"></script>
+<script src="js/main.js?v=5"></script>
+</body>
+</html>
