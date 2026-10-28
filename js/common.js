@@ -88,7 +88,7 @@ const TS = (() => {
   function mosSurface(p, Vgb, Vcb = 0) {
     const e2 = Math.exp(-(2 * p.phiF + Vcb) / UT);
     const F = psi => {
-      const a = UT * (Math.exp(-psi / UT) - 1) + psi + e2 * (UT * (Math.exp(psi / UT) - 1) - psi);
+      const a = UT * (Math.exp(-psi / UT) - 1) + psi + (e2 > 0 ? e2 * (UT * (Math.exp(psi / UT) - 1) - psi) : 0);
       return Math.sqrt(Math.max(a, 0));
     };
     const g = psi => p.Vfb + psi + Math.sign(psi) * p.gamma * F(psi) - Vgb;
@@ -427,6 +427,15 @@ const TS = (() => {
     }
   }
 
+  // Portadores minoritarios: punto con contorno blanco para distinguirlos de los mayoritarios.
+  function minority(ctx, pts, color, r = 2.6) {
+    if (!pts.length) return;
+    ctx.beginPath();
+    for (const p of pts) { ctx.moveTo(p[0] + r, p[1]); ctx.arc(p[0], p[1], r, 0, 6.2832); }
+    ctx.fillStyle = color; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+
   // Ícono de iones fijos (+ o −).
   function ions(ctx, pts, sign, color = 'rgba(255,255,255,.55)', s = 2.6) {
     if (!pts.length) return;
@@ -518,7 +527,7 @@ const TS = (() => {
     UT, NI, EG, EPS_SI, EPS_OX, Q, C,
     clamp, lerp, smooth, softplus, bisect, linspace, fmtSI, fmtV, rng, gauss, visRate,
     mosParams, mosVt, mosSlope, mosSurface, mosCurrent, mosChannel, depletionNm, sample,
-    Surface, Plot, drawBands, junctionPsi, dots, Cloud, ions, label, terminal, arrow, tag, channelTransport,
+    Surface, Plot, drawBands, junctionPsi, dots, Cloud, ions, minority, label, terminal, arrow, tag, channelTransport,
     bindControls, setBadge, readout,
   };
 })();

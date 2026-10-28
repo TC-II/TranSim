@@ -5,20 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TranSim — Simulador de transistores</title>
   <meta name="description" content="Simulación interactiva de la juntura PN, el MOSFET, el BJT y el inversor CMOS: cortes con portadores en movimiento, curvas características, regiones de operación y diagramas de bandas.">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
 <header class="top">
   <h1>Tran<span>Sim</span></h1>
   <nav class="tabs">
     <button data-tab="pn">Juntura PN</button>
+    <button data-tab="moscap">Capacitor MOS</button>
     <button data-tab="mosfet">MOSFET</button>
     <button data-tab="bjt">BJT</button>
-    <button data-tab="cmos">CMOS</button>
+    <button data-tab="cmos">Inversor CMOS</button>
   </nav>
   <div class="legend-bar">
     <span><i style="background:var(--electron)"></i>electrones</span>
     <span><i style="background:var(--hole)"></i>huecos</span>
+    <span><i style="background:#888;border:1.5px solid #fff"></i>minoritario</span>
     <span><i style="background:#1f3558;border-radius:2px"></i>tipo n</span>
     <span><i style="background:#4a2433;border-radius:2px"></i>tipo p</span>
     <span><i style="background:#2a2d38;border-radius:2px;border:1px solid #555"></i>zona de vaciamiento</span>
@@ -66,6 +68,58 @@ I = I_S (e^(V_A/U_T) − 1)</span>
       <div class="card"><div class="card-title">Densidad de carga ρ(x)</div><canvas class="plot short" id="pn-rho"></canvas></div>
       <div class="card"><div class="card-title">Campo eléctrico E(x)</div><canvas class="plot short" id="pn-field"></canvas></div>
       <div class="card"><div class="card-title">Potencial ψ(x)</div><canvas class="plot short" id="pn-pot"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CAPACITOR MOS -->
+<section class="tab" id="tab-moscap">
+  <aside class="controls">
+    <h2>Capacitor MOS</h2>
+    <p class="sub">Compuerta / SiO<sub>2</sub> / Si con el cuerpo a masa. Sin fuente ni drenador: los minoritarios sólo llegan por generación térmica.</p>
+    <div class="ctrl"><label>V<sub>G</sub> <b data-out="Vg"></b></label>
+      <input type="range" data-key="Vg" min="-4" max="4" step="0.01" data-unit="V"></div>
+    <div class="ctrl"><label>Medición / barrido</label>
+      <select data-key="mode"><option value="lf">Baja frecuencia (cuasi-estático)</option><option value="hf">Alta frecuencia</option><option value="deep">Barrido rápido (vaciamiento profundo)</option></select></div>
+    <h3>Estructura</h3>
+    <div class="ctrl"><label>Sustrato</label>
+      <select data-key="sub"><option value="p">Tipo p</option><option value="n">Tipo n</option></select></div>
+    <div class="ctrl"><label>log<sub>10</sub>(dopaje) [cm⁻³] <b data-out="logN"></b></label>
+      <input type="range" data-key="logN" min="15" max="18" step="0.1" data-fmt="1"></div>
+    <div class="ctrl"><label>t<sub>ox</sub> <b data-out="tox"></b></label>
+      <input type="range" data-key="tox" min="2" max="50" step="1" data-fmt="0" data-unit="nm"></div>
+    <div class="ctrl"><label>Compuerta</label>
+      <select data-key="gate"><option value="npoly">Poli-Si n⁺ (Φ_M = 4.05 eV)</option><option value="ppoly">Poli-Si p⁺ (Φ_M = 5.17 eV)</option><option value="al">Aluminio (Φ_M = 4.10 eV)</option></select></div>
+    <div class="ctrl"><label>Velocidad de animación <b data-out="speed"></b></label>
+      <input type="range" data-key="speed" min="0.1" max="3" step="0.1" data-fmt="1" data-unit="×"></div>
+    <span class="region-badge" id="mc-badge"></span>
+    <h3>Valores</h3>
+    <table class="readout" id="mc-read"></table>
+    <h3>Teoría</h3>
+    <div class="theory">
+      <span class="eq">V_G = V_FB + ψs − Q_s/C_ox
+V_FB = Φ_M − Φ_S
+V_T = V_FB + 2φ_F + γ√(2φ_F)
+1/C = 1/C_ox + 1/C_s</span>
+      <ul>
+        <li><b>Acumulación</b>: mayoritarios apilados en la superficie, C ≈ C<sub>ox</sub>.</li>
+        <li><b>Vaciamiento</b>: los mayoritarios se retiran y quedan iones fijos; C<sub>ox</sub> en serie con ε<sub>s</sub>/W<sub>d</sub>.</li>
+        <li><b>Inversión</b>: aparece la capa de minoritarios y W<sub>d</sub> queda clavado en W<sub>d,máx</sub>. En <b>baja frecuencia</b> la carga de inversión sigue a la señal y C vuelve a C<sub>ox</sub>; en <b>alta frecuencia</b> no llega (la generación es lenta) y C queda en C<sub>mín</sub>.</li>
+        <li><b>Vaciamiento profundo</b>: si V<sub>G</sub> cambia más rápido que la generación, no hay capa de inversión y W<sub>d</sub> sigue creciendo. Al subir V<sub>G</sub> en modo cuasi-estático se ve el transitorio: W<sub>d</sub> se agranda y se recupera a medida que se generan pares.</li>
+      </ul>
+    </div>
+  </aside>
+  <div class="viz">
+    <div class="card"><div class="card-title">Corte transversal <small>signos en la compuerta = carga de compuerta · flechas = campo en el óxido</small></div>
+      <canvas class="xsec" id="mc-xsec"></canvas></div>
+    <div class="grid2">
+      <div class="card"><div class="card-title">Diagrama de bandas (compuerta → sustrato)</div><canvas class="plot" id="mc-band"></canvas></div>
+      <div class="card"><div class="card-title">Curva C–V</div><canvas class="plot" id="mc-cv"></canvas></div>
+    </div>
+    <div class="grid3">
+      <div class="card"><div class="card-title">Densidad de carga ρ(y)</div><canvas class="plot short" id="mc-rho"></canvas></div>
+      <div class="card"><div class="card-title">Campo eléctrico E(y)</div><canvas class="plot short" id="mc-field"></canvas></div>
+      <div class="card"><div class="card-title">Potencial ψ(y)</div><canvas class="plot short" id="mc-pot"></canvas></div>
     </div>
   </div>
 </section>
@@ -221,12 +275,13 @@ NM_H = V_OH − V_IH,  NM_L = V_IL − V_OL
 </main>
 <footer>TranSim · Teoría de Circuitos II · modelos didácticos (EKV, Ebers–Moll, aproximación de vaciamiento). <a href="https://github.com/TC-II/TranSim">Código fuente</a></footer>
 
-<script src="js/common.js?v=6"></script>
-<script src="js/mosband.js?v=6"></script>
-<script src="js/pn.js?v=6"></script>
-<script src="js/mosfet.js?v=6"></script>
-<script src="js/bjt.js?v=6"></script>
-<script src="js/cmos.js?v=6"></script>
-<script src="js/main.js?v=6"></script>
+<script src="js/common.js?v=10"></script>
+<script src="js/mosband.js?v=10"></script>
+<script src="js/pn.js?v=10"></script>
+<script src="js/moscap.js?v=10"></script>
+<script src="js/mosfet.js?v=10"></script>
+<script src="js/bjt.js?v=10"></script>
+<script src="js/cmos.js?v=10"></script>
+<script src="js/main.js?v=10"></script>
 </body>
 </html>

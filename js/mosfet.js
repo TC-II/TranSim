@@ -8,7 +8,7 @@ TS.MOSFET = (() => {
   const st = { Vgs: 2.5, Vds: 1.5, Vsb: 0, WL: 10, lambda: 0.05, cut: 0.5, logT: false, speed: 1 };
   const M = { dirty: true };
   let xsec, pOut, pTr, pBV, pBL;
-  let holes, eS, eD, accL, invL, flow = [], acc = 0, op = null;
+  let holes, eS, eD, accL, invL, flow = [], acc = 0, op = null, mins = [], minFl = [], lastDt = 0;
   const r = TS.rng(5);
   const KV = 2, D0 = 12, QREF = 3;
 
@@ -66,6 +66,7 @@ TS.MOSFET = (() => {
 
   function step(dt) {
     dt *= st.speed;
+    lastDt = dt;
     holes.update(dt); eS.update(dt); eD.update(dt); accL.update(dt); invL.update(dt);
     const { ch, m } = op;
     const idb = ch.Id / m.beta;
@@ -169,6 +170,45 @@ TS.MOSFET = (() => {
     TS.terminal(c, gcx, 22, 'G', st.Vgs);
     TS.terminal(c, dcx, 22, 'D', st.Vds);
     TS.terminal(c, g.w / 2, g.by + 20, 'B', -Vsb);
+    // electrones minoritarios del sustrato: difusión en zona neutra; en vaciamiento el campo
+    // los arrastra al canal (bajo la compuerta) o hacia el n+ (fuga de juntura)
+    {
+      const inNp = (x, y) => y > g.sy && y < g.sy + g.jd && ((x > g.sx0 && x < g.sx1) || (x > g.dx0 && x < g.dx1));
+      const spawn = () => { for (;;) { const x = lerp(g.x0 + 6, g.x1 - 6, r()), y = lerp(g.sy + 40, g.by - 6, r()); if (!inDep(x, y)) return { x: x / g.w, y: y / g.h }; } };
+      if (!mins.length) for (let k = 0; k < 30; k++) mins.push(spawn());
+      const dt = lastDt, step = 55 * Math.sqrt(Math.max(dt, 0));
+      for (let k = 0; k < mins.length; k++) {
+        const m = mins[k];
+        let x = m.x * g.w, y = m.y * g.h;
+        if (inDep(x, y)) {
+          m.drift = true;
+          const underGate = x > g.gx0 + 4 && x < g.gx1 - 4 && y - g.sy < depAt(x) + 1;
+          let tx, ty;
+          if (underGate) { tx = x; ty = g.sy; }
+          else { const sx = x < g.w / 2 ? (g.sx0 + g.sx1) / 2 : (g.dx0 + g.dx1) / 2; tx = sx; ty = g.sy + g.jd * 0.5; }
+          const d = Math.hypot(tx - x, ty - y) || 1, v = 160 * dt;
+          x += (tx - x) / d * v; y += (ty - y) / d * v;
+          if (y < g.sy + 2 || inNp(x, y)) { mins[k] = spawn(); continue; }
+        } else {
+          m.drift = false;
+          x = clamp(x + (r() - 0.5) * step, g.x0 + 3, g.x1 - 3);
+          y = clamp(y + (r() - 0.5) * step, g.sy + 3, g.by - 3);
+          if (inNp(x, y)) { mins[k] = spawn(); continue; }
+          if (op.psi[0] < 0 && y < g.sy + 12 && x > g.gx0 && x < g.gx1 && r() < dt * 4) { minFl.push({ x, y, t: 0 }); mins[k] = spawn(); continue; }
+        }
+        m.x = x / g.w; m.y = y / g.h;
+      }
+      TS.minority(c, mins.map(m => [m.x * g.w, m.y * g.h]), C.electron);
+      for (const f of minFl) {
+        f.t += dt;
+        c.strokeStyle = '#ffe08a'; c.globalAlpha = Math.max(0, 1 - f.t / 0.45); c.lineWidth = 1.5;
+        c.beginPath(); c.arc(f.x, f.y, 3 + 14 * f.t, 0, 6.28); c.stroke();
+      }
+      c.globalAlpha = 1;
+      minFl = minFl.filter(f => f.t < 0.45);
+      if (mins.some(m => m.drift)) TS.tag(c, g.x1 - 8, g.by - 14, 'arrastre', 'minoritarios (◯) en vaciamiento', 'right');
+      TS.tag(c, g.x0 + 80, g.by - 34, 'difusion', 'minoritarios (◯) en zona neutra', 'left');
+    }
     // electrones del flujo de corriente
     const fl = [];
     for (const p of flow) {
@@ -208,7 +248,8 @@ TS.MOSFET = (() => {
     }
     const dmax = Math.max(...dep) * g.nmPx;
     if (dmax > 12) TS.label(c, g.gx0 + 6, g.sy + dmax * 0.65, `W_d ≈ ${Math.round(Math.max(...dep))} nm`, C.muted, 'left', '10px Inter, sans-serif');
-    TS.label(c, g.w - 34, g.h - 12, `regimen bajo G: ${op.sCut.regime}`, C.muted, 'right', '10px Inter, sans-serif');
+    const vgb = st.Vgs + st.Vsb;
+    TS.label(c, g.w - 34, g.h - 12, `bajo G: ${op.sCut.regime} · V_GB = ${vgb.toFixed(2)} V ${vgb < P.Vfb ? '<' : '>'} V_FB = ${P.Vfb.toFixed(2)} V`, C.muted, 'right', '10px Inter, sans-serif');
   }
 
   // ------------------------------------------------------------ gráficos
@@ -305,6 +346,8 @@ TS.MOSFET = (() => {
     const gm = (Id(st.Vgs + h, st.Vds) - Id(st.Vgs - h, st.Vds)) / (2 * h);
     const gds = (Id(st.Vgs, st.Vds + h) - Id(st.Vgs, Math.max(st.Vds - h, 0))) / (st.Vds > h ? 2 * h : h);
     TS.readout(document.getElementById('mos-read'), [
+      ['V_GB = V_GS + V_SB', (st.Vgs + st.Vsb).toFixed(3) + ' V'],
+      ['V_FB (banda plana)', P.Vfb.toFixed(3) + ' V'],
       ['V_T (con V_SB)', m.Vt.toFixed(3) + ' V'],
       ['Factor de pendiente n', m.n.toFixed(3)],
       ['β = k′·W/L', TS.fmtSI(m.beta, 'A/V²')],
