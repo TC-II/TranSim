@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TranSim — Simulador de transistores</title>
   <meta name="description" content="Simulación interactiva de la juntura PN, el capacitor MOS, el MOSFET y el BJT: cortes con portadores en movimiento, curvas características, regiones de operación y diagramas de bandas.">
-  <link rel="stylesheet" href="css/style.css?v=12">
+  <link rel="stylesheet" href="css/style.css?v=13">
 </head>
 <body>
 <header class="top">
@@ -62,6 +62,8 @@ I = I_S (e^(V_A/U_T) − 1)</span>
     <div class="grid2">
       <div class="card"><div class="card-title">Diagrama de bandas</div><canvas class="plot" id="pn-band"></canvas></div>
       <div class="card"><div class="card-title">Característica I–V</div><canvas class="plot" id="pn-iv"></canvas></div>
+      <div class="card"><div class="card-title">Concentraciones n(x), p(x) (escala log)</div><canvas class="plot" id="pn-conc"></canvas></div>
+      <div class="card"><div class="card-title">Componentes de corriente</div><canvas class="plot" id="pn-cur"></canvas></div>
     </div>
     <div class="grid3">
       <div class="card"><div class="card-title">Densidad de carga ρ(x)</div><canvas class="plot short" id="pn-rho"></canvas></div>
@@ -219,6 +221,8 @@ I_B = (I_S/β_F)(e^(V_BE/U_T) − 1) + (I_S/β_R)(e^(V_BC/U_T) − 1)</span>
       <div class="card"><div class="card-title">Gummel: I<sub>C</sub>, I<sub>B</sub> vs V<sub>BE</sub></div><canvas class="plot" id="bjt-gum"></canvas></div>
       <div class="card"><div class="card-title">Diagrama de bandas E → B → C</div><canvas class="plot" id="bjt-band"></canvas></div>
       <div class="card"><div class="card-title">Concentración de minoritarios</div><canvas class="plot" id="bjt-min"></canvas></div>
+      <div class="card"><div class="card-title">Componentes de corriente</div><canvas class="plot" id="bjt-cur"></canvas></div>
+      <div class="card"><div class="card-title">Concentraciones n(x), p(x) (escala log)</div><canvas class="plot" id="bjt-conc"></canvas></div>
     </div>
   </div>
 </section>
@@ -226,12 +230,12 @@ I_B = (I_S/β_F)(e^(V_BE/U_T) − 1) + (I_S/β_R)(e^(V_BC/U_T) − 1)</span>
 </main>
 <footer>TranSim · Teoría de Circuitos II · modelos didácticos (EKV, Ebers–Moll, aproximación de vaciamiento). <a href="https://github.com/TC-II/TranSim">Código fuente</a></footer>
 
-<script src="js/common.js?v=12"></script>
-<script src="js/mosband.js?v=12"></script>
-<script src="js/pn.js?v=12"></script>
-<script src="js/moscap.js?v=12"></script>
-<script src="js/mosfet.js?v=12"></script>
-<script src="js/bjt.js?v=12"></script>
-<script src="js/main.js?v=12"></script>
+<script src="js/common.js?v=13"></script>
+<script src="js/mosband.js?v=13"></script>
+<script src="js/pn.js?v=13"></script>
+<script src="js/moscap.js?v=13"></script>
+<script src="js/mosfet.js?v=13"></script>
+<script src="js/bjt.js?v=13"></script>
+<script src="js/main.js?v=13"></script>
 </body>
 </html>

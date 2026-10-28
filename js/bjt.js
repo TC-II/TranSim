@@ -4,12 +4,12 @@ TS.BJT = (() => {
   const NE = 1e19, NB = 1e17, NC = 1e16;
   const phiE = UT * Math.log(NE / NI), phiB = UT * Math.log(NB / NI), phiC = UT * Math.log(NC / NI);
   const VBI_EB = phiE + phiB, VBI_BC = phiB + phiC;
-  const IS = 1e-15, BR = 2, VON = 0.5;
+  const IS = 1e-15, BR = 2, VON = 0.5, HOLE_INJ = 0.004;
   // estructura 1D en unidades normalizadas (0..1)
   const XEB = 0.28, XBC = 0.50, LPE = 0.05, LPC = 0.12;
   const st = { Vbe: 0.7, Vce: 3, betaF: 100, VA: 50, view: '1d', speed: 1 };
   const M = { dirty: true };
-  let xsec, pOut, pGum, pBand, pMin, op;
+  let xsec, pOut, pGum, pBand, pMin, pCur, pConc, op;
   let cE, cB, cC, mE, mB, mC, flow = [], flashes = [], acc = { eF: 0, eR: 0, hE: 0, hC: 0 };
   let planar = null;
   const r = TS.rng(31);
@@ -21,7 +21,21 @@ TS.BJT = (() => {
     const early = Vbc < 0 ? 1 - Vbc / st.VA : 1;
     const Ic = (iF - iR) * early - iR / BR;
     const Ib = iF / st.betaF + iR / BR;
-    return { Vbe, Vce, Vbc, iF, iR, Ic, Ib, Ie: Ic + Ib };
+    // Componentes: la corriente de base directa se reparte en huecos inyectados al emisor
+    // (limitada por N_B/N_E ≈ 0.4 % de la inyección de electrones) y recombinación en la base.
+    const ipE = Math.sign(iF) * Math.min(Math.abs(iF) / st.betaF, Math.abs(iF) * HOLE_INJ);
+    const recF = iF / st.betaF - ipE;
+    const ipC = 0.7 * iR / BR, recR = iR / BR - ipC;
+    const comp = {
+      InE: iF * early + recF,     // e⁻ inyectados E → B
+      InC: iF * early,            // e⁻ que llegan al colector
+      recF,                       // recombinación en la base (directa)
+      IpE: ipE,                   // h⁺ inyectados B → E
+      InR: iR * early + recR,     // e⁻ inyectados C → B (inversa / saturación)
+      InRE: iR * early,           // e⁻ del colector que llegan al emisor
+      recR, IpC: ipC,             // recombinación (inversa) y h⁺ inyectados B → C
+    };
+    return { Vbe, Vce, Vbc, iF, iR, Ic, Ib, Ie: Ic + Ib, comp };
   }
   function region(Vbe, Vbc) {
     const be = Vbe > VON, bc = Vbc > VON;
@@ -63,6 +77,7 @@ TS.BJT = (() => {
     xsec = new TS.Surface($('bjt-xsec'));
     pOut = new TS.Plot($('bjt-out')); pGum = new TS.Plot($('bjt-gum'));
     pBand = new TS.Plot($('bjt-band')); pMin = new TS.Plot($('bjt-min'));
+    pCur = new TS.Surface($('bjt-cur')); pConc = new TS.Plot($('bjt-conc'));
     cE = new TS.Cloud(240, rr => [rr() * XEB, 0.03 + 0.94 * rr()], 41, 0.004);
     cB = new TS.Cloud(120, rr => [lerp(XEB, XBC, rr()), 0.03 + 0.94 * rr()], 42, 0.004);
     cC = new TS.Cloud(170, rr => [lerp(XBC, 1, rr()), 0.03 + 0.94 * rr()], 43, 0.004);
@@ -186,6 +201,80 @@ TS.BJT = (() => {
     pMin.text((XEB + XBC) / 2, { py: pMin.y1 - 9 }, 'Base', C.muted, 'center');
     pMin.text((XBC + 1) / 2, { py: pMin.y1 - 9 }, 'Colector', C.muted, 'center');
     pMin.text((XEB + XBC) / 2, { py: pMin.y0 + 24 }, 'I_C ∝ −dn_p/dx', C.accent2, 'center');
+    // ---- concentraciones (log)
+    pConc.frame({ xmin: 0, xmax: 1, ymin: 1, ymax: 1e21, ylog: true, xticks: false, xlabel: 'posición', ylabel: 'concentración [cm⁻³]', ml: 62 });
+    pConc.band(0, XEB, 'rgba(43,85,146,.12)'); pConc.band(XEB, XBC, 'rgba(110,46,66,.14)'); pConc.band(XBC, 1, 'rgba(31,53,88,.12)');
+    pConc.band(XEB - d.eE, d.b0, 'rgba(255,255,255,.05)'); pConc.band(d.b1, XBC + d.cC, 'rgba(255,255,255,.05)');
+    pConc.line([0, XEB, XEB, XBC, XBC, 1], [NE, NE, NB, NB, NC, NC], 'rgba(200,200,200,.6)', 1.2, [3, 3]);
+    pConc.line(pr.xs, pr.n.map(v => v * NI), C.electron, 2.2);
+    pConc.line(pr.xs, pr.p.map(v => v * NI), C.hole, 2.2);
+    pConc.hline(NI, C.Ei, [2, 3]);
+    pConc.text({ px: pConc.x0 + 4 }, NI, 'n_i', C.Ei, 'left', 'bottom');
+    pConc.legend([{ label: 'n (electrones)', color: C.electron }, { label: 'p (huecos)', color: C.hole }, { label: 'dopaje N_D / N_A', color: 'rgba(200,200,200,.8)', dash: [3, 3] }], 'br');
+    pConc.text(XEB / 2, { py: pConc.y0 + 10 }, 'Emisor', C.muted, 'center');
+    pConc.text((XEB + XBC) / 2, { py: pConc.y0 + 10 }, 'Base', C.muted, 'center');
+    pConc.text((XBC + 1) / 2, { py: pConc.y0 + 10 }, 'Colector', C.muted, 'center');
+    drawCurrents();
+  }
+
+  // Diagrama de componentes: flechas internas = flujo de portadores; terminales = I convencional.
+  function drawCurrents() {
+    const s = pCur, c = s.ctx, w = s.w, h = s.h, k = op.comp;
+    s.clear();
+    const xE0 = 70, xB0 = w * 0.40, xC0 = w * 0.60, xC1 = w - 70, y0 = 56, y1 = h - 28;
+    c.fillStyle = 'rgba(43,85,146,.35)'; c.fillRect(xE0, y0, xB0 - xE0, y1 - y0);
+    c.fillStyle = 'rgba(110,46,66,.45)'; c.fillRect(xB0, y0, xC0 - xB0, y1 - y0);
+    c.fillStyle = 'rgba(31,53,88,.45)'; c.fillRect(xC0, y0, xC1 - xC0, y1 - y0);
+    const f = '10px Inter, sans-serif', fb = 'bold 11px Inter, sans-serif';
+    TS.label(c, (xE0 + xB0) / 2, y1 - 9, 'Emisor n⁺', C.muted, 'center', f);
+    TS.label(c, (xB0 + xC0) / 2, y1 - 9, 'Base p', C.muted, 'center', f);
+    TS.label(c, (xC0 + xC1) / 2, y1 - 9, 'Colector n', C.muted, 'center', f);
+    const W = I => 1.2 + 7 * clamp(Math.log10(Math.abs(I) / 1e-13) / 11, 0, 1);
+    const on = I => Math.abs(I) > 1e-13;
+    const ar = (x0, y0_, x1, y1_, I, col, txt, tx, ty, align = 'center') => {
+      if (!on(I)) return;
+      TS.arrow(c, x0, y0_, x1, y1_, col, W(I), 6 + W(I));
+      TS.label(c, tx, ty, `${txt} = ${TS.fmtSI(Math.abs(I), 'A')}`, col, align, f);
+    };
+    const yN = y0 + (y1 - y0) * 0.22, yP = y0 + (y1 - y0) * 0.50, yR = y0 + (y1 - y0) * 0.36, yPC = y0 + (y1 - y0) * 0.66;
+    const xBm = (xB0 + xC0) / 2;
+    // directa
+    if (on(k.InE)) {
+      ar(xE0 + 20, yN, xC1 - 20, yN, k.InC, '#7fc0ff', 'I_nC (e⁻ colectados)', (xC0 + xC1) / 2, yN - 12);
+      TS.label(c, (xE0 + xB0) / 2, yN - 12, `I_nE (e⁻ inyectados) = ${TS.fmtSI(Math.abs(k.InE), 'A')}`, '#7fc0ff', 'center', f);
+      if (on(k.recF)) {
+        TS.arrow(c, xBm - 10, yN + 4, xBm - 10, yP + 26, '#7fc0ff', W(k.recF), 6 + W(k.recF));
+        TS.arrow(c, xBm + 6, y0 + 2, xBm + 6, yP + 26, C.hole, W(k.recF), 6 + W(k.recF));
+        TS.label(c, xBm, yP + 40, `I_rB recomb. = ${TS.fmtSI(Math.abs(k.recF), 'A')}`, C.warn, 'center', f);
+        c.strokeStyle = '#ffe08a'; c.lineWidth = 1.5; c.beginPath(); c.arc(xBm - 2, yP + 28, 6, 0, 6.28); c.stroke();
+      }
+      if (on(k.IpE)) {
+        c.strokeStyle = C.hole; c.lineWidth = W(k.IpE);
+        c.beginPath(); c.moveTo(xBm - 30, y0 + 2); c.lineTo(xBm - 30, yP); c.stroke();
+        ar(xBm - 30, yP, xE0 + 20, yP, k.IpE, C.hole, 'I_pE (h⁺ inyectados al emisor)', (xE0 + xB0) / 2, yP - 12);
+      }
+    }
+    // inversa (saturación / activa inversa)
+    if (on(k.InR) && k.InR > 1e-12) {
+      ar(xC1 - 20, yR, xE0 + 20, yR, k.InRE, '#b3dcff', 'I_nR (e⁻ del colector)', (xE0 + xB0) / 2, yR - 11);
+      if (on(k.IpC)) {
+        c.strokeStyle = C.hole; c.lineWidth = W(k.IpC);
+        c.beginPath(); c.moveTo(xBm + 30, y0 + 2); c.lineTo(xBm + 30, yPC); c.stroke();
+        ar(xBm + 30, yPC, xC1 - 20, yPC, k.IpC, C.hole, 'I_pC (h⁺ al colector)', (xC0 + xC1) / 2, yPC - 12);
+      }
+    }
+    // terminales (corriente convencional)
+    const term = (x0, y0_, x1, y1_, I, name, tx, ty, align) => {
+      const col = C.accent2;
+      if (Math.abs(I) < 1e-15) { TS.label(c, tx, ty, `${name} ≈ 0`, col, align, fb); return; }
+      if (I > 0) TS.arrow(c, x0, y0_, x1, y1_, col, 2.2, 8); else TS.arrow(c, x1, y1_, x0, y0_, col, 2.2, 8);
+      TS.label(c, tx, ty, `${name} = ${TS.fmtSI(I, 'A')}`, col, align, fb);
+    };
+    term(xE0, (y0 + y1) / 2, xE0 - 40, (y0 + y1) / 2, op.Ie, 'I_E', xE0 - 4, (y0 + y1) / 2 + 16, 'right');
+    term(xBm, 8, xBm, y0 - 2, op.Ib, 'I_B', xBm + 10, 20, 'left');
+    term(xC1 + 40, (y0 + y1) / 2, xC1, (y0 + y1) / 2, op.Ic, 'I_C', xC1 + 4, (y0 + y1) / 2 + 16, 'left');
+    TS.label(c, 8, 12, 'flechas internas: flujo de portadores (e⁻ azul, h⁺ rojo) · terminales: corriente convencional', C.muted, 'left', '10px Inter, sans-serif');
+    if (!on(k.InE) && !(k.InR > 1e-12)) TS.label(c, w / 2, (y0 + y1) / 2, 'Corte: sólo corrientes de fuga (≈ 0)', C.bad, 'center', fb);
   }
 
   function readouts() {
@@ -200,6 +289,12 @@ TS.BJT = (() => {
       ['I_B', TS.fmtSI(op.Ib, 'A')],
       ['I_E', TS.fmtSI(op.Ie, 'A')],
       ['β efectivo I_C/I_B', op.Ib > 1e-18 ? (op.Ic / op.Ib).toFixed(1) : '—'],
+      ['I_nE (e⁻ inyectados)', TS.fmtSI(op.comp.InE, 'A')],
+      ['I_pE (h⁺ al emisor)', TS.fmtSI(op.comp.IpE, 'A')],
+      ['I_rB (recomb. base)', TS.fmtSI(op.comp.recF, 'A')],
+      ['γ = I_nE/(I_nE+I_pE)', op.comp.InE > 1e-15 ? (op.comp.InE / (op.comp.InE + op.comp.IpE)).toFixed(4) : '—'],
+      ['α_T = I_nC/I_nE', op.comp.InE > 1e-15 ? (op.comp.InC / op.comp.InE).toFixed(4) : '—'],
+      ['α = γ·α_T', op.comp.InE > 1e-15 ? (op.comp.InC / (op.comp.InE + op.comp.IpE)).toFixed(4) : '—'],
       ['g_m = I_C/U_T', op.Ic > 0 ? TS.fmtSI(gm, 'S') : '—'],
       ['r_π = β/g_m', op.Ic > 0 ? TS.fmtSI(st.betaF / gm, 'Ω') : '—'],
       ['r_o ≈ (V_A+V_CE)/I_C', op.Ic > 0 ? TS.fmtSI((st.VA + op.Vce) / op.Ic, 'Ω') : '—'],
@@ -505,7 +600,7 @@ TS.BJT = (() => {
       xsec.clear();
       if (st.view === '1d') draw1d(); else drawPlanar();
     }
-    const plots = [pOut, pGum, pBand, pMin];
+    const plots = [pOut, pGum, pBand, pMin, pCur, pConc];
     if (M.dirty || plots.some(p => p.dirty)) {
       drawPlots(); readouts();
       document.getElementById('bjt-xsec-sub').textContent = 'destellos = recombinación · I_B exagerada ×5 para que se vea';

@@ -3,10 +3,12 @@ TS.PN = (() => {
   const { UT, NI, C, clamp, lerp } = TS;
   const NA = 1e16, ND = 5e16, LN = 0.55, LP = 0.4;   // longitudes de difusión ilustrativas [µm]
   const IS = 1e-15;
+  const FN = (3 / LN / NA) / (3 / LN / NA + 1 / LP / ND);   // fracción electrónica (D_n ≈ 3 D_p)
   const phiP = UT * Math.log(NA / NI), phiN = UT * Math.log(ND / NI), VBI = phiP + phiN;
   const XL = -2, XR = 2;                              // extensión del dispositivo [µm]
   const st = { Va: 0, logI: true, speed: 1 };
   const M = { dirty: true };
+  let pConc, pCur;
   let xsec, pBand, pIV, pRho, pE, pPsi, holes, elecs, flow = [], flashes = [], accN = 0, accP = 0, accG = 0;
   const r = TS.rng(11);
 
@@ -20,6 +22,7 @@ TS.PN = (() => {
     xsec = new TS.Surface($('pn-xsec'));
     pBand = new TS.Plot($('pn-band')); pIV = new TS.Plot($('pn-iv'));
     pRho = new TS.Plot($('pn-rho')); pE = new TS.Plot($('pn-field')); pPsi = new TS.Plot($('pn-pot'));
+    pConc = new TS.Plot($('pn-conc')); pCur = new TS.Plot($('pn-cur'));
     holes = new TS.Cloud(300, rr => [rr() * 0.5, 0.04 + 0.92 * rr()], 3);
     elecs = new TS.Cloud(340, rr => [0.5 + rr() * 0.5, 0.04 + 0.92 * rr()], 4);
     TS.bindControls($('tab-pn'), st, () => { M.dirty = true; });
@@ -107,6 +110,35 @@ TS.PN = (() => {
     pPsi.frame({ xmin: XL, xmax: XR, ymin: -phiP - 5.2, ymax: phiN + 0.9, xlabel: 'x [µm]', ylabel: 'ψ [V]', mb: 30 });
     pPsi.line(xs, pr.psi, C.ok, 2);
     pPsi.text(-1.9, pr.psi[0] + 0.25, 'ψ_p = −φ_p + V_A', C.muted, 'left', 'bottom');
+    // concentraciones (log)
+    const regs = pl => { pl.band(XL, -g.xp, 'rgba(110,46,66,.14)'); pl.band(-g.xp, g.xn, 'rgba(255,255,255,.05)'); pl.band(g.xn, XR, 'rgba(43,85,146,.14)'); };
+    pConc.frame({ xmin: XL, xmax: XR, ymin: 1e-2, ymax: 1e18, ylog: true, xlabel: 'x [µm]', ylabel: 'concentración [cm⁻³]', ml: 62 });
+    regs(pConc);
+    pConc.line([XL, 0, 0, XR], [NA, NA, ND, ND], 'rgba(200,200,200,.6)', 1.2, [3, 3]);
+    pConc.line(xs, pr.n.map(v => v * NI), C.electron, 2.2);
+    pConc.line(xs, pr.p.map(v => v * NI), C.hole, 2.2);
+    pConc.hline(NI, C.Ei, [2, 3]);
+    pConc.text({ px: pConc.x0 + 4 }, NI, 'n_i', C.Ei, 'left', 'bottom');
+    pConc.legend([{ label: 'n', color: C.electron }, { label: 'p', color: C.hole }, { label: 'N_A / N_D', color: 'rgba(200,200,200,.8)', dash: [3, 3] }], 'br');
+    pConc.text(-1.95, { py: pConc.y0 + 10 }, `n·p = n_i²·e^(V_A/U_T) en la juntura`, C.accent2, 'left');
+    // componentes de corriente a lo largo del dispositivo (normalizadas a I)
+    pCur.frame({ xmin: XL, xmax: XR, ymin: -0.1, ymax: 1.15, xlabel: 'x [µm]', ylabel: 'I_n, I_p  /  I', ml: 48 });
+    regs(pCur);
+    if (Math.abs(I) < 1e-20) {
+      pCur.text(0, 0.5, 'Equilibrio: I = 0 (arrastre y difusión se cancelan)', C.muted, 'center');
+    } else {
+      const In = xs.map(x => x < -g.xp ? FN * Math.exp((x + g.xp) / LN) : x > g.xn ? 1 - (1 - FN) * Math.exp(-(x - g.xn) / LP) : FN);
+      const Ip = In.map(v => 1 - v);
+      pCur.line([XL, XR], [1, 1], C.text, 1.6, [6, 4]);
+      pCur.line(xs, In, C.electron, 2.4);
+      pCur.line(xs, Ip, C.hole, 2.4);
+      const fw = Va > 0;
+      pCur.text(-1.95, 0.08, fw ? 'I_n: difusión de e⁻ minoritarios' : 'I_n: e⁻ generados, difusión → arrastre', C.electron, 'left', 'bottom');
+      pCur.text(-1.95, 0.92, 'I_p: arrastre de h⁺ mayoritarios', C.hole, 'left', 'top');
+      pCur.text(1.95, 0.08, fw ? 'I_p: difusión de h⁺ minoritarios' : 'I_p: h⁺ generados', C.hole, 'right', 'bottom');
+      pCur.text(1.95, 0.92, 'I_n: arrastre de e⁻ mayoritarios', C.electron, 'right', 'top');
+      pCur.text(0, 1.08, `I total = ${TS.fmtSI(I, 'A')} (constante)`, C.text, 'center');
+    }
   }
 
   function spawnFlash(u, v, color) { flashes.push({ u, v, t: 0, color }); }
@@ -117,7 +149,7 @@ TS.PN = (() => {
     holes.update(dt); elecs.update(dt);
     // inyección en directa
     const R = TS.visRate(I, 1e-12, 1e-2, 70);
-    accN += R * 0.75 * dt; accP += R * 0.25 * dt;
+    accN += R * FN * dt; accP += R * (1 - FN) * dt;
     while (accN >= 1) { accN--; flow.push({ k: 'e', u: uN, v: 0.05 + 0.9 * r(), life: -Math.log(r() + 1e-9) * LN, d: 0 }); }
     while (accP >= 1) { accP--; flow.push({ k: 'h', u: uP, v: 0.05 + 0.9 * r(), life: -Math.log(r() + 1e-9) * LP, d: 0 }); }
     // generación térmica (exagerada) en inversa
@@ -238,7 +270,7 @@ TS.PN = (() => {
   M.frame = dt => {
     step(dt);
     if (xsec.visible()) drawXsec();
-    const plots = [pBand, pIV, pRho, pE, pPsi];
+    const plots = [pBand, pIV, pRho, pE, pPsi, pConc, pCur];
     if (M.dirty || plots.some(p => p.dirty)) {
       drawPlots(); readouts();
       M.dirty = false; plots.forEach(p => (p.dirty = false));
