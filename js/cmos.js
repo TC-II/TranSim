@@ -268,6 +268,11 @@ TS.CMOS = (() => {
     TS.label(c, cx(g.nG), sy + jd + 26, `NMOS: ${rn}`, C.text, 'center', 'bold 11px Inter, sans-serif');
     TS.label(c, cx(g.pG), sy + jd + 26, `PMOS: ${rp}`, C.text, 'center', 'bold 11px Inter, sans-serif');
     TS.label(c, X(0.25), Y(0.93), 'Sustrato p (GND)', C.text, 'center', f);
+    const trTag = (ch, ga, carrier) => {
+      const tr = TS.channelTransport(ch);
+      if (tr) TS.tag(c, cx(ga), sy + jd + 46, tr, carrier + { arrastre: ' en el canal', difusion: ' (subumbral)', ambos: ' (inv. moderada)' }[tr]);
+    };
+    trTag(chN, g.nG, 'e⁻'); trTag(chP, g.pG, 'h⁺');
     TS.label(c, X(0.74), Y(g.wellD) - 14, 'Pozo n (VDD)', C.text, 'center', f);
     TS.label(c, cx(g.nS), sy + jd * 0.6, 'n⁺', C.text, 'center', f); TS.label(c, cx(g.nD), sy + jd * 0.6, 'n⁺', C.text, 'center', f);
     TS.label(c, cx(g.pS), sy + jd * 0.6, 'p⁺', C.text, 'center', f); TS.label(c, cx(g.pD), sy + jd * 0.6, 'p⁺', C.text, 'center', f);

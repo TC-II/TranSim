@@ -199,6 +199,12 @@ TS.MOSFET = (() => {
       const xp = lerp(g.gx0, g.gx1, ch.Le);
       TS.arrow(c, xp - 2, g.sy + 46, xp, g.sy + 6, C.accent2, 1.4, 6);
       TS.label(c, xp - 2, g.sy + 54, 'pinch-off', C.accent2, 'center', f);
+      TS.tag(c, lerp(xp, g.gx1, 0.5) + 30, g.sy + 74, 'arrastre', 'campo lateral alto');
+    }
+    const tr = TS.channelTransport(ch);
+    if (tr) {
+      const extra = { arrastre: 'canal de inversión', difusion: 'subumbral', ambos: 'inversión moderada' }[tr];
+      TS.tag(c, lerp(g.gx0, g.gx1, (ch.pinch ? ch.Le : 1) * 0.42), g.sy + 24, tr, extra);
     }
     const dmax = Math.max(...dep) * g.nmPx;
     if (dmax > 12) TS.label(c, g.gx0 + 6, g.sy + dmax * 0.65, `W_d ≈ ${Math.round(Math.max(...dep))} nm`, C.muted, 'left', '10px Inter, sans-serif');

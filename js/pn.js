@@ -196,6 +196,21 @@ TS.PN = (() => {
     const ay = by1 + 20;
     TS.arrow(c, X(uN), ay, X(uP), ay, C.accent2, 2);
     TS.label(c, (X(uP) + X(uN)) / 2, ay + 13, `E (máx ${(Emax / 1e3).toFixed(0)} kV/cm)`, C.accent2, 'center', '11px Inter, sans-serif');
+    // mecanismos de transporte
+    const tY = by0 + 16, bY = by1 - 14, xd = (X(uP) + X(uN)) / 2;
+    if (Va > 0.05) {
+      TS.tag(c, X(uP) - 8, tY, 'difusion', 'e⁻ minoritarios', 'right');
+      TS.tag(c, X(uN) + 8, tY, 'difusion', 'h⁺ minoritarios', 'left');
+      TS.tag(c, xd, (by0 + by1) / 2, 'ambos', 'casi en equilibrio');
+      TS.tag(c, X(0) + 6, bY, 'arrastre', 'h⁺ mayoritarios', 'left');
+      TS.tag(c, X(1) - 6, bY, 'arrastre', 'e⁻ mayoritarios', 'right');
+    } else if (Va < -0.05) {
+      TS.tag(c, xd, tY, 'arrastre', 'pares generados');
+      TS.tag(c, X(uP) - 8, bY, 'difusion', 'e⁻ hacia la juntura', 'right');
+      TS.tag(c, X(uN) + 8, bY, 'difusion', 'h⁺ hacia la juntura', 'left');
+    } else {
+      TS.tag(c, xd, tY, 'ambos', 'se cancelan (I = 0)');
+    }
     TS.label(c, X(0.22), by0 - 22, 'tipo p  (N_A = 10¹⁶)', C.text);
     TS.label(c, X(0.78), by0 - 22, 'tipo n  (N_D = 5·10¹⁶)', C.text);
     TS.label(c, (X(uP) + X(uN)) / 2, by0 - 8, `W = ${(g.w * 1000).toFixed(0)} nm`, C.muted, 'center', '11px Inter, sans-serif');

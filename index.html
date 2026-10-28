@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TranSim — Simulador de transistores</title>
   <meta name="description" content="Simulación interactiva de la juntura PN, el MOSFET, el BJT y el inversor CMOS: cortes con portadores en movimiento, curvas características, regiones de operación y diagramas de bandas.">
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body>
 <header class="top">
@@ -22,6 +22,8 @@
     <span><i style="background:#1f3558;border-radius:2px"></i>tipo n</span>
     <span><i style="background:#4a2433;border-radius:2px"></i>tipo p</span>
     <span><i style="background:#2a2d38;border-radius:2px;border:1px solid #555"></i>zona de vaciamiento</span>
+    <span><i style="background:transparent;border:1.5px solid #ffb454"></i>arrastre</span>
+    <span><i style="background:transparent;border:1.5px solid #4fd18b"></i>difusión</span>
   </div>
 </header>
 
@@ -48,6 +50,7 @@ I = I_S (e^(V_A/U_T) − 1)</span>
       <ul>
         <li><b>Directa</b>: baja la barrera, mayoritarios se inyectan y se recombinan como minoritarios (difusión).</li>
         <li><b>Inversa</b>: la barrera crece, la zona de vaciamiento se ensancha y sólo circula la corriente de generación/saturación.</li>
+        <li><b>Arrastre</b> (J = qµnE): movimiento por el campo eléctrico. <b>Difusión</b> (J = qD·dn/dx): movimiento por gradiente de concentración. En equilibrio ambas se cancelan en la zona de vaciamiento.</li>
         <li>La separación E<sub>Fn</sub>−E<sub>Fp</sub> en la juntura vale qV<sub>A</sub>.</li>
       </ul>
     </div>
@@ -218,12 +221,12 @@ NM_H = V_OH − V_IH,  NM_L = V_IL − V_OL
 </main>
 <footer>TranSim · Teoría de Circuitos II · modelos didácticos (EKV, Ebers–Moll, aproximación de vaciamiento). <a href="https://github.com/TC-II/TranSim">Código fuente</a></footer>
 
-<script src="js/common.js?v=5"></script>
-<script src="js/mosband.js?v=5"></script>
-<script src="js/pn.js?v=5"></script>
-<script src="js/mosfet.js?v=5"></script>
-<script src="js/bjt.js?v=5"></script>
-<script src="js/cmos.js?v=5"></script>
-<script src="js/main.js?v=5"></script>
+<script src="js/common.js?v=6"></script>
+<script src="js/mosband.js?v=6"></script>
+<script src="js/pn.js?v=6"></script>
+<script src="js/mosfet.js?v=6"></script>
+<script src="js/bjt.js?v=6"></script>
+<script src="js/cmos.js?v=6"></script>
+<script src="js/main.js?v=6"></script>
 </body>
 </html>

@@ -266,6 +266,21 @@ TS.BJT = (() => {
     TS.label(c, X((XEB + XBC) / 2), by1 + 16, 'Base p', C.text, 'center', f);
     TS.label(c, X((XBC + 1) / 2), by1 + 16, 'Colector n', C.text, 'center', f);
     TS.label(c, X((d.b0 + d.b1) / 2), by1 + 32, `W_B efectiva`, C.accent2, 'center', '10px Inter, sans-serif');
+    // mecanismos de transporte
+    const tY = by0 + 16, bY = by1 - 14, beOn = op.Vbe > 0.4, bcOn = op.Vbc > 0.4;
+    if (beOn) {
+      TS.tag(c, X((d.b0 + d.b1) / 2), tY, 'difusion', 'e⁻ en la base');
+      TS.tag(c, X(XEB - d.eE) - 6, (by0 + by1) / 2, 'difusion', 'h⁺ en emisor', 'right');
+    }
+    if (bcOn) {
+      TS.tag(c, X(XBC + d.cC) + 6, (by0 + by1) / 2, 'difusion', 'h⁺ en colector', 'left');
+      if (!beOn) TS.tag(c, X((d.b0 + d.b1) / 2), tY, 'difusion', 'e⁻ en la base');
+    } else if (beOn) TS.tag(c, X((d.b1 + XBC + d.cC) / 2), bY, 'arrastre', 'barrido por E de BC');
+    if (beOn || bcOn) {
+      TS.tag(c, X(0.02), bY, 'arrastre', 'mayoritarios', 'left');
+      TS.tag(c, X(0.98), tY, 'arrastre', 'mayoritarios', 'right');
+    }
+    if (!beOn && !bcOn) TS.tag(c, X(0.5), tY, 'arrastre', 'sólo fugas por generación');
     c.strokeStyle = C.accent2; c.lineWidth = 1;
     c.beginPath(); c.moveTo(X(d.b0), by1 + 24); c.lineTo(X(d.b1), by1 + 24); c.stroke();
     // corrientes convencionales
@@ -415,6 +430,11 @@ TS.BJT = (() => {
     TS.label(c, X(0.5), Y((g.epiB + g.blB) / 2), 'Capa enterrada n⁺', C.text, 'center', f);
     TS.label(c, X((g.sk0 + g.sk1) / 2), Y(0.4), 'n⁺', C.text, 'center', f);
     TS.label(c, X(0.5), Y(0.9), 'Sustrato p', C.text, 'center', f);
+    if (op.Vbe > 0.4 || op.Vbc > 0.4) {
+      TS.tag(c, X(g.ex1) + 8, Y((g.eD + g.bD) / 2), 'difusion', 'e⁻ en la base', 'left');
+      if (op.Vbc < 0.4) TS.tag(c, X(g.ex1) + 8, Y(g.bD) + d.cC * 0.35 * H * 0.5 + 6, 'arrastre', 'vaciamiento BC', 'left');
+      TS.tag(c, X(0.62), Y((g.epiB + g.blB) / 2) + 16, 'arrastre', 'colector (mayoritarios)');
+    }
     TS.label(c, X(g.iso0 - 0.02), Y(0.3), 'p⁺', C.text, 'center', f);
     TS.label(c, X(g.iso1 + 0.02), Y(0.3), 'p⁺', C.text, 'center', f);
   }

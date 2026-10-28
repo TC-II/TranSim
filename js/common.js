@@ -444,6 +444,28 @@ const TS = (() => {
     ctx.fillText(s, x, y);
   }
 
+  // Etiqueta del mecanismo de transporte: 'arrastre' (J = qµnE) o 'difusion' (J = qD dn/dx).
+  const TRANSPORT = { arrastre: ['arrastre', '#ffb454'], difusion: ['difusión', '#4fd18b'], ambos: ['arrastre + difusión', '#7fd8ff'] };
+  function tag(ctx, x, y, kind, extra = '', align = 'center') {
+    const [name, col] = TRANSPORT[kind];
+    const s = name + (extra ? ' · ' + extra : '');
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    const w = ctx.measureText(s).width + 14;
+    const x0 = align === 'center' ? x - w / 2 : align === 'left' ? x : x - w;
+    ctx.fillStyle = 'rgba(13,18,29,.82)'; ctx.strokeStyle = col; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.roundRect(x0, y - 8, w, 16, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(s, x0 + w / 2, y + 0.5);
+  }
+
+  // Mecanismo dominante en el canal de un MOS según el nivel de inversión.
+  function channelTransport(ch) {
+    if (!(ch.Id > 1e-15)) return null;
+    if (ch.Vov < -2 * UT) return 'difusion';
+    if (ch.Vov < 6 * UT) return 'ambos';
+    return 'arrastre';
+  }
+
   function terminal(ctx, x, y, name, volts, color = C.accent2) {
     ctx.fillStyle = '#0d121d'; ctx.strokeStyle = color; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.roundRect(x - 34, y - 11, 68, 22, 6); ctx.fill(); ctx.stroke();
@@ -496,7 +518,7 @@ const TS = (() => {
     UT, NI, EG, EPS_SI, EPS_OX, Q, C,
     clamp, lerp, smooth, softplus, bisect, linspace, fmtSI, fmtV, rng, gauss, visRate,
     mosParams, mosVt, mosSlope, mosSurface, mosCurrent, mosChannel, depletionNm, sample,
-    Surface, Plot, drawBands, junctionPsi, dots, Cloud, ions, label, terminal, arrow,
+    Surface, Plot, drawBands, junctionPsi, dots, Cloud, ions, label, terminal, arrow, tag, channelTransport,
     bindControls, setBadge, readout,
   };
 })();
