@@ -229,3 +229,9 @@ body.touring main { padding-bottom: 30vh; }
   header.top { position: static; }
   .card { scroll-margin-top: 8px; }
 }
+.tour-audio { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; }
+.tour-snd { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; font-size: 14px; line-height: 1; padding: 4px 7px; cursor: pointer; }
+.tour-snd.off { opacity: .55; }
+.tour-abar { flex: 1; height: 3px; background: #1d263a; border-radius: 2px; overflow: hidden; }
+.tour-abar i { display: block; height: 100%; width: 0; background: #ffb454; }
+.tour-auto { color: var(--muted); font-size: 11.5px; display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }

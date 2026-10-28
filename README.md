@@ -13,8 +13,20 @@ Simulador interactivo de dispositivos semiconductores para **Teoría de Circuito
 
 ## Modo explicación
 
-El botón **▶ Modo explicación** abre un recorrido guiado de 40 pasos por las cuatro pestañas (juntura PN → capacitor MOS → MOSFET → BJT).
+El botón **▶ Modo explicación** abre un recorrido guiado de 39 pasos por las cuatro pestañas (juntura PN → capacitor MOS → MOSFET → BJT).
 Cada paso mueve los controles con una transición animada, resalta el gráfico relevante y explica la física. Se navega con ← → y se puede saltar a cualquier paso o tema.
+
+Cada paso tiene **narración en voz alta** (🔊, tecla N para silenciar) y opción de *avance automático* al terminar el audio.
+Los MP3 de `audio/` se generan con [piper](https://github.com/rhasspy/piper) (voz `es_AR-daniela-high`) a partir de los textos de `js/tour.js`:
+
+```bash
+python -m venv ~/.local/share/piper-tts/venv && ~/.local/share/piper-tts/venv/bin/pip install piper-tts
+# bajar es_AR-daniela-high.onnx y .onnx.json de huggingface.co/rhasspy/piper-voices a ~/.local/share/piper-tts/
+node tools/gen_audio.mjs          # regenera sólo los pasos cuyo texto cambió
+node tools/gen_audio.mjs --print  # muestra cómo se va a leer cada paso
+```
+
+La notación (subíndices, letras griegas, operadores) se convierte a texto hablado en `tools/speak.mjs`; un paso puede definir `say: '…'` para fijar su lectura a mano.
 
 ## Modelos
 

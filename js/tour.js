@@ -253,6 +253,39 @@ TS.TOUR = (() => {
 
   let on = false, ch = 0, st = 0, panel, tweens = [], timer = null;
 
+  // narración: audio/<tab>-<n>.mp3 generados con tools/gen_audio.mjs (piper)
+  const pref = (k, d) => { try { const v = localStorage.getItem('tour-' + k); return v === null ? d : v === '1'; } catch { return d; } };
+  const save = (k, v) => { try { localStorage.setItem('tour-' + k, v ? '1' : '0'); } catch { /* sin storage */ } };
+  let sound = pref('sound', true), auto = pref('auto', false), advTimer = null, manifest = null;
+  const voice = new Audio();
+  voice.preload = 'auto';
+  fetch('audio/manifest.json').then(r => r.json()).then(m => { manifest = m; }).catch(() => { manifest = {}; });
+
+  function stepId() { return `${CHAPTERS[ch].tab}-${st + 1}`; }
+  function narrate() {
+    clearTimeout(advTimer);
+    voice.pause();
+    if (!sound) return;
+    const id = stepId(), h = manifest?.[id]?.hash;
+    voice.src = `audio/${id}.mp3${h ? '?h=' + h : ''}`;
+    voice.currentTime = 0;
+    voice.play().catch(() => { /* bloqueado por el navegador o sin archivo */ });
+  }
+  voice.addEventListener('ended', () => {
+    if (on && auto && !(ch === CHAPTERS.length - 1 && st === CHAPTERS[ch].steps.length - 1)) advTimer = setTimeout(next, 1200);
+  });
+  voice.addEventListener('timeupdate', () => {
+    if (panel && voice.duration) panel.querySelector('.tour-abar i').style.width = (voice.currentTime / voice.duration * 100) + '%';
+  });
+  function setSound(v, quiet) {
+    sound = v; save('sound', v);
+    panel.querySelector('.tour-snd').classList.toggle('off', !v);
+    panel.querySelector('.tour-snd').textContent = v ? '🔊' : '🔇';
+    panel.querySelector('.tour-abar i').style.width = '0';
+    if (quiet) return;
+    if (v) narrate(); else { voice.pause(); clearTimeout(advTimer); }
+  }
+
   function control(tab, key) { return document.querySelector(`#tab-${tab} [data-key="${key}"]`); }
   function setNow(tab, key, v) {
     const el = control(tab, key);
@@ -296,6 +329,8 @@ TS.TOUR = (() => {
       setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: innerWidth > 900 ? 'center' : 'start' }), 60);
     }
     render();
+    panel.querySelector('.tour-abar i').style.width = '0';
+    narrate();
   }
 
   function total() { return CHAPTERS.reduce((a, c) => a + c.steps.length, 0); }
@@ -337,6 +372,11 @@ TS.TOUR = (() => {
         <button class="tour-close" title="Salir (Esc)">✕</button>
       </div>
       <div class="tour-bar"><i></i></div>
+      <div class="tour-audio">
+        <button class="tour-snd" title="Narración en voz alta (N)">🔊</button>
+        <div class="tour-abar"><i></i></div>
+        <label class="tour-auto" title="Pasar solo al siguiente paso cuando termina el audio"><input type="checkbox"> avance automático</label>
+      </div>
       <h3 class="tour-title"></h3>
       <div class="tour-text"></div>
       <div class="tour-dots"></div>
@@ -345,12 +385,17 @@ TS.TOUR = (() => {
         <button class="tour-replay" title="Repetir la animación de este paso">↻ Repetir</button>
         <button class="tour-next">Siguiente ▶</button>
       </div>
-      <div class="tour-hint">← → para navegar · podés mover los controles libremente en cualquier paso</div>`;
+      <div class="tour-hint">← → para navegar · N silencia la voz · podés mover los controles libremente en cualquier paso</div>`;
     document.body.appendChild(panel);
     panel.querySelector('.tour-next').onclick = next;
     panel.querySelector('.tour-prev').onclick = prev;
     panel.querySelector('.tour-close').onclick = stop;
     panel.querySelector('.tour-replay').onclick = () => apply();
+    panel.querySelector('.tour-snd').onclick = () => setSound(!sound);
+    const autoBox = panel.querySelector('.tour-auto input');
+    autoBox.checked = auto;
+    autoBox.onchange = () => { auto = autoBox.checked; save('auto', auto); if (auto && voice.ended) next(); };
+    setSound(sound, true);
     panel.querySelector('.tour-chapter').onchange = e => { ch = +e.target.value; st = 0; apply(); };
     panel.querySelector('.tour-dots').onclick = e => { const i = e.target.dataset.i; if (i !== undefined) { st = +i; apply(); } };
     document.addEventListener('keydown', e => {
@@ -358,6 +403,7 @@ TS.TOUR = (() => {
       if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
       else if (e.key === 'Escape') stop();
+      else if (e.key === 'n' || e.key === 'N') setSound(!sound);
     });
   }
 
@@ -373,7 +419,8 @@ TS.TOUR = (() => {
     document.getElementById('tour-btn').classList.add('active');
   }
   function stop() {
-    on = false; tweens = []; clearTimeout(timer);
+    on = false; tweens = []; clearTimeout(timer); clearTimeout(advTimer);
+    voice.pause();
     if (panel) panel.style.display = 'none';
     document.body.classList.remove('touring');
     document.querySelectorAll('.tour-focus').forEach(e => e.classList.remove('tour-focus'));

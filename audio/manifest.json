@@ -1,0 +1,158 @@
+{
+ "pn-1": {
+  "hash": "c41d9399abde",
+  "dur": 28.3
+ },
+ "pn-2": {
+  "hash": "01cc89f87bcb",
+  "dur": 25.4
+ },
+ "pn-3": {
+  "hash": "08709be808fd",
+  "dur": 22.3
+ },
+ "pn-4": {
+  "hash": "30ede080367e",
+  "dur": 20
+ },
+ "pn-5": {
+  "hash": "9493b9fbf3fc",
+  "dur": 15.4
+ },
+ "pn-6": {
+  "hash": "0b69e3ca7dc5",
+  "dur": 21.9
+ },
+ "pn-7": {
+  "hash": "05a78bd24fc5",
+  "dur": 17.7
+ },
+ "pn-8": {
+  "hash": "70dfba3bb98d",
+  "dur": 13.4
+ },
+ "pn-9": {
+  "hash": "b807271a3022",
+  "dur": 21
+ },
+ "moscap-1": {
+  "hash": "a9c55de1587f",
+  "dur": 23.1
+ },
+ "moscap-2": {
+  "hash": "f3fb352be0c6",
+  "dur": 21.8
+ },
+ "moscap-3": {
+  "hash": "bd2cb051ecb4",
+  "dur": 20.5
+ },
+ "moscap-4": {
+  "hash": "4f20e80a0cca",
+  "dur": 17.2
+ },
+ "moscap-5": {
+  "hash": "5865ad207dce",
+  "dur": 20.2
+ },
+ "moscap-6": {
+  "hash": "f9d687f0942b",
+  "dur": 23.4
+ },
+ "moscap-7": {
+  "hash": "945d8138e375",
+  "dur": 20.6
+ },
+ "moscap-8": {
+  "hash": "0d764acfa2da",
+  "dur": 13
+ },
+ "moscap-9": {
+  "hash": "afefa668789d",
+  "dur": 13.8
+ },
+ "moscap-10": {
+  "hash": "b9d601e2fed6",
+  "dur": 17
+ },
+ "mosfet-1": {
+  "hash": "46f0bb40db0a",
+  "dur": 21
+ },
+ "mosfet-2": {
+  "hash": "4647599e22a1",
+  "dur": 15.7
+ },
+ "mosfet-3": {
+  "hash": "1241abc3c507",
+  "dur": 22.5
+ },
+ "mosfet-4": {
+  "hash": "e5e024e85c8e",
+  "dur": 17.4
+ },
+ "mosfet-5": {
+  "hash": "998043655129",
+  "dur": 13
+ },
+ "mosfet-6": {
+  "hash": "80d2e7254ca0",
+  "dur": 26.2
+ },
+ "mosfet-7": {
+  "hash": "96c8c14e5c8e",
+  "dur": 14.8
+ },
+ "mosfet-8": {
+  "hash": "6efc3d988f56",
+  "dur": 16.6
+ },
+ "mosfet-9": {
+  "hash": "3d3130a65b5d",
+  "dur": 17.4
+ },
+ "bjt-1": {
+  "hash": "ec436337b4c1",
+  "dur": 15.6
+ },
+ "bjt-2": {
+  "hash": "917d94e85fe4",
+  "dur": 21.6
+ },
+ "bjt-3": {
+  "hash": "10adb7249872",
+  "dur": 18.4
+ },
+ "bjt-4": {
+  "hash": "5bf5e7052a0d",
+  "dur": 19.9
+ },
+ "bjt-5": {
+  "hash": "0230de93ada8",
+  "dur": 22.5
+ },
+ "bjt-6": {
+  "hash": "1fcd3cb94ad5",
+  "dur": 15.7
+ },
+ "bjt-7": {
+  "hash": "cf12b3a4f607",
+  "dur": 11.5
+ },
+ "bjt-8": {
+  "hash": "0730a9409bc6",
+  "dur": 14.4
+ },
+ "bjt-9": {
+  "hash": "2480efab9d25",
+  "dur": 18.7
+ },
+ "bjt-10": {
+  "hash": "6609540171d2",
+  "dur": 17.5
+ },
+ "bjt-11": {
+  "hash": "56d3a896c9ee",
+  "dur": 22.2
+ }
+}
