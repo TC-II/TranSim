@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TranSim — Simulador de transistores</title>
   <meta name="description" content="Simulación interactiva de la juntura PN, el capacitor MOS, el MOSFET y el BJT: cortes con portadores en movimiento, curvas características, regiones de operación y diagramas de bandas.">
-  <link rel="stylesheet" href="css/style.css?v=13">
+  <link rel="stylesheet" href="css/style.css?v=17">
 </head>
 <body>
 <header class="top">
@@ -16,6 +16,7 @@
     <button data-tab="mosfet">MOSFET</button>
     <button data-tab="bjt">BJT</button>
   </nav>
+  <button id="tour-btn" class="tour-btn">▶ Modo explicación</button>
   <div class="legend-bar">
     <span><i style="background:var(--electron)"></i>electrones</span>
     <span><i style="background:var(--hole)"></i>huecos</span>
@@ -230,12 +231,13 @@ I_B = (I_S/β_F)(e^(V_BE/U_T) − 1) + (I_S/β_R)(e^(V_BC/U_T) − 1)</span>
 </main>
 <footer>TranSim · Teoría de Circuitos II · modelos didácticos (EKV, Ebers–Moll, aproximación de vaciamiento). <a href="https://github.com/TC-II/TranSim">Código fuente</a></footer>
 
-<script src="js/common.js?v=13"></script>
-<script src="js/mosband.js?v=13"></script>
-<script src="js/pn.js?v=13"></script>
-<script src="js/moscap.js?v=13"></script>
-<script src="js/mosfet.js?v=13"></script>
-<script src="js/bjt.js?v=13"></script>
-<script src="js/main.js?v=13"></script>
+<script src="js/common.js?v=17"></script>
+<script src="js/mosband.js?v=17"></script>
+<script src="js/pn.js?v=17"></script>
+<script src="js/moscap.js?v=17"></script>
+<script src="js/mosfet.js?v=17"></script>
+<script src="js/bjt.js?v=17"></script>
+<script src="js/main.js?v=17"></script>
+<script src="js/tour.js?v=17"></script>
 </body>
 </html>

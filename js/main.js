@@ -14,6 +14,7 @@
     if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
   }
 
+  TS.showTab = show;
   document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
   window.addEventListener('hashchange', () => show(location.hash.slice(1)));
   show(location.hash.slice(1) || 'mosfet');

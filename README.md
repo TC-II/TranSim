@@ -11,6 +11,11 @@ Simulador interactivo de dispositivos semiconductores para **Teoría de Circuito
 | **BJT** | Vista intrínseca 1D y corte planar de un NPN integrado, recombinación en la base, efecto Early. Curvas de salida con regiones, Gummel, bandas E→B→C con E_Fn/E_Fp y perfil de minoritarios. |
 | **Capacitor MOS** | Corte con carga de compuerta y campo en el óxido, acumulación/vaciamiento/inversión, transitorio de generación y vaciamiento profundo, minoritarios. Bandas, C–V (BF, AF, vaciamiento profundo), ρ(y), E(y), ψ(y). |
 
+## Modo explicación
+
+El botón **▶ Modo explicación** abre un recorrido guiado de 40 pasos por las cuatro pestañas (juntura PN → capacitor MOS → MOSFET → BJT).
+Cada paso mueve los controles con una transición animada, resalta el gráfico relevante y explica la física. Se navega con ← → y se puede saltar a cualquier paso o tema.
+
 ## Modelos
 
 - MOSFET: modelo continuo tipo EKV + ecuación de potencial de superficie (aproximación de lámina de carga).
