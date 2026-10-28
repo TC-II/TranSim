@@ -10,7 +10,7 @@ TS.BJT = (() => {
   const st = { Vbe: 0.7, Vce: 3, betaF: 100, VA: 50, view: '1d', speed: 1 };
   const M = { dirty: true };
   let xsec, pOut, pGum, pBand, pMin, op;
-  let cE, cB, cC, flow = [], flashes = [], acc = { eF: 0, eR: 0, hE: 0, hC: 0 };
+  let cE, cB, cC, mE, mB, mC, flow = [], flashes = [], acc = { eF: 0, eR: 0, hE: 0, hC: 0 };
   let planar = null;
   const r = TS.rng(31);
 
@@ -44,6 +44,20 @@ TS.BJT = (() => {
     return d;
   }
 
+  // Fracción visible de minoritarios: perfil lineal en la base (difusión con recombinación
+  // despreciable) y exponencial en emisor/colector. La escala log hace que en corte no haya.
+  function minFrac() {
+    const { Vbe, Vbc, d } = op;
+    const eB = Math.exp(Math.min(Vbe, 0.9) / UT) - 1, eC = Math.exp(Math.min(Vbc, 0.9) / UT) - 1;
+    const nEdge = Math.max(1 + eB, 1 + eC, 1);
+    const g = v => clamp(Math.log10(v) / 12, 0, 1);
+    return {
+      base: t => (1 + eB * (1 - t) + eC * t) / nEdge * g(nEdge),
+      emit: dist => (1 + eB * Math.exp(-dist / LPE)) / (1 + Math.max(eB, 0)) * g(1 + eB) * 0.45,
+      coll: dist => (1 + eC * Math.exp(-dist / LPC)) / (1 + Math.max(eC, 0)) * g(1 + eC) * 0.6,
+    };
+  }
+
   function init() {
     const $ = id => document.getElementById(id);
     xsec = new TS.Surface($('bjt-xsec'));
@@ -52,6 +66,10 @@ TS.BJT = (() => {
     cE = new TS.Cloud(240, rr => [rr() * XEB, 0.03 + 0.94 * rr()], 41, 0.004);
     cB = new TS.Cloud(120, rr => [lerp(XEB, XBC, rr()), 0.03 + 0.94 * rr()], 42, 0.004);
     cC = new TS.Cloud(170, rr => [lerp(XBC, 1, rr()), 0.03 + 0.94 * rr()], 43, 0.004);
+    // minoritarios: posiciones fijas cuya visibilidad sigue el perfil de concentración
+    mB = new TS.Cloud(190, rr => [lerp(XEB, XBC, rr()), 0.04 + 0.92 * rr()], 44, 0.006);
+    mE = new TS.Cloud(90, rr => [lerp(XEB - 0.2, XEB, rr()), 0.04 + 0.92 * rr()], 45, 0.006);
+    mC = new TS.Cloud(90, rr => [lerp(XBC, XBC + 0.35, rr()), 0.04 + 0.92 * rr()], 46, 0.006);
     TS.bindControls($('tab-bjt'), st, k => { M.dirty = true; if (k === 'view') { flow = []; flashes = []; } });
     const presets = { cut: [0.3, 3], act: [0.7, 3], sat: [0.75, 0.08], inv: [0.2, -0.6] };
     $('bjt-presets').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
@@ -240,11 +258,24 @@ TS.BJT = (() => {
     TS.ions(c, ionN, -1, 'rgba(255,160,160,.75)');
     TS.dots(c, vis, C.electron, 2);
     TS.dots(c, hv, C.hole, 2);
-    // flujo
-    const fe = [], fh = [];
-    for (const f of flow) (f.k[0] === 'e' ? fe : fh).push([X(f.u), Y(f.v)]);
+    // minoritarios (◯): su densidad sigue el perfil de concentración → el gradiente impulsa la difusión
+    const mf = minFrac(), mbE = [], mhE = [], mhC = [];
+    for (const q of mB.p) if (q.x > d.b0 && q.x < d.b1 && q.u < mf.base((q.x - d.b0) / (d.b1 - d.b0))) mbE.push([X(q.x), Y(q.y)]);
+    for (const q of mE.p) if (q.x < XEB - d.eE && q.u < mf.emit(XEB - d.eE - q.x)) mhE.push([X(q.x), Y(q.y)]);
+    for (const q of mC.p) if (q.x > XBC + d.cC && q.u < mf.coll(q.x - XBC - d.cC)) mhC.push([X(q.x), Y(q.y)]);
+    TS.minority(c, mbE, C.electron, 2.4);
+    TS.minority(c, [...mhE, ...mhC], C.hole, 2.4);
+    // flujo: minoritarios con contorno, mayoritarios como punto brillante
+    const fe = [], fh = [], me = [], mh = [];
+    for (const f of flow) {
+      const pt = [X(f.u), Y(f.v)];
+      if (f.k[0] === 'e') (f.u > XEB && f.u < XBC ? me : fe).push(pt);
+      else (f.u < XEB || f.u > XBC ? mh : fh).push(pt);
+    }
     TS.dots(c, fe, '#a8d4ff', 2.6, 8);
     TS.dots(c, fh, '#ffb3b3', 2.6, 8);
+    TS.minority(c, me, '#a8d4ff', 3);
+    TS.minority(c, mh, '#ffb3b3', 3);
     for (const fl of flashes) {
       c.strokeStyle = '#ffe08a'; c.globalAlpha = 1 - fl.t / 0.45; c.lineWidth = 1.5;
       c.beginPath(); c.arc(X(fl.u), Y(fl.v), 3 + 14 * fl.t, 0, 6.28); c.stroke();
@@ -269,12 +300,12 @@ TS.BJT = (() => {
     // mecanismos de transporte
     const tY = by0 + 16, bY = by1 - 14, beOn = op.Vbe > 0.4, bcOn = op.Vbc > 0.4;
     if (beOn) {
-      TS.tag(c, X((d.b0 + d.b1) / 2), tY, 'difusion', 'e⁻ en la base');
-      TS.tag(c, X(XEB - d.eE) - 6, (by0 + by1) / 2, 'difusion', 'h⁺ en emisor', 'right');
+      TS.tag(c, X((d.b0 + d.b1) / 2), tY, 'difusion', 'e⁻ minoritarios (◯)');
+      TS.tag(c, X(XEB - d.eE) - 6, (by0 + by1) / 2, 'difusion', 'h⁺ minoritarios (◯)', 'right');
     }
     if (bcOn) {
-      TS.tag(c, X(XBC + d.cC) + 6, (by0 + by1) / 2, 'difusion', 'h⁺ en colector', 'left');
-      if (!beOn) TS.tag(c, X((d.b0 + d.b1) / 2), tY, 'difusion', 'e⁻ en la base');
+      TS.tag(c, X(XBC + d.cC) + 6, (by0 + by1) / 2, 'difusion', 'h⁺ minoritarios (◯)', 'left');
+      if (!beOn) TS.tag(c, X((d.b0 + d.b1) / 2), tY, 'difusion', 'e⁻ minoritarios (◯)');
     } else if (beOn) TS.tag(c, X((d.b1 + XBC + d.cC) / 2), bY, 'arrastre', 'barrido por E de BC');
     if (beOn || bcOn) {
       TS.tag(c, X(0.02), bY, 'arrastre', 'mayoritarios', 'left');
@@ -403,9 +434,32 @@ TS.BJT = (() => {
     const P = cl => cl.p.map(p => [X(p.x), Y(p.y)]);
     TS.dots(c, [...P(planar.eE), ...P(planar.eC), ...P(planar.eBL), ...P(planar.eSK)], C.electron, 1.9);
     TS.dots(c, [...P(planar.hB), ...P(planar.hS)], C.hole, 1.9);
-    // flujo
-    TS.dots(c, flow.filter(f => f.k === 'e' && f.x !== undefined).map(f => [X(f.x), Y(f.y)]), '#a8d4ff', 2.5, 8);
-    TS.dots(c, flow.filter(f => f.k === 'h' && f.x !== undefined).map(f => [X(f.x), Y(f.y)]), '#ffb3b3', 2.5, 8);
+    // minoritarios bajo el emisor: e⁻ en la base intrínseca y h⁺ inyectados al emisor
+    {
+      const mf = minFrac(), yb0 = g.eD + d.eB * 0.35, yb1 = g.bD - d.cB * 0.35;
+      const pts = [], ph = [];
+      for (const q of mB.p) {
+        const xx = lerp(g.ex0 + 0.01, g.ex1 - 0.01, (q.x - XEB) / (XBC - XEB)), t = q.y;
+        if (q.u < mf.base(t)) pts.push([X(xx), Y(lerp(yb0, yb1, t))]);
+      }
+      for (const q of mE.p) {
+        const dist = (XEB - q.x), yy = g.eD - dist / 0.2 * (g.eD - g.s - 0.02);
+        if (q.u < mf.emit(dist)) ph.push([X(lerp(g.ex0 + 0.01, g.ex1 - 0.01, q.y)), Y(yy)]);
+      }
+      for (const q of mC.p) {
+        const dist = q.x - XBC, yy = g.bD + d.cC * 0.35 + dist / 0.35 * 0.12;
+        if (q.u < mf.coll(dist)) ph.push([X(lerp(g.bx0 + 0.02, g.bx1 - 0.02, q.y)), Y(yy)]);
+      }
+      TS.minority(c, pts, C.electron, 2.3);
+      TS.minority(c, ph, C.hole, 2.3);
+    }
+    // flujo: minoritarios con contorno (e⁻ en la base, h⁺ en emisor/colector)
+    const inBaseP = f => f.y > g.eD && f.y < g.bD && f.x > g.bx0 && f.x < g.bx1;
+    const fl = flow.filter(f => f.x !== undefined);
+    TS.dots(c, fl.filter(f => f.k === 'e' && !inBaseP(f)).map(f => [X(f.x), Y(f.y)]), '#a8d4ff', 2.5, 8);
+    TS.dots(c, fl.filter(f => f.k === 'h' && (inBaseP(f) || f.y < g.s + 0.12 && !(f.x > g.ex0 && f.x < g.ex1))).map(f => [X(f.x), Y(f.y)]), '#ffb3b3', 2.5, 8);
+    TS.minority(c, fl.filter(f => f.k === 'e' && inBaseP(f)).map(f => [X(f.x), Y(f.y)]), '#a8d4ff', 3);
+    TS.minority(c, fl.filter(f => f.k === 'h' && !inBaseP(f) && !(f.y < g.s + 0.12 && !(f.x > g.ex0 && f.x < g.ex1))).map(f => [X(f.x), Y(f.y)]), '#ffb3b3', 3);
     for (const fl of flashes) {
       c.strokeStyle = '#ffe08a'; c.globalAlpha = 1 - fl.t / 0.45; c.lineWidth = 1.5;
       c.beginPath(); c.arc(X(fl.u), Y(fl.v), 3 + 14 * fl.t, 0, 6.28); c.stroke();
@@ -431,7 +485,7 @@ TS.BJT = (() => {
     TS.label(c, X((g.sk0 + g.sk1) / 2), Y(0.4), 'n⁺', C.text, 'center', f);
     TS.label(c, X(0.5), Y(0.9), 'Sustrato p', C.text, 'center', f);
     if (op.Vbe > 0.4 || op.Vbc > 0.4) {
-      TS.tag(c, X(g.ex1) + 8, Y((g.eD + g.bD) / 2), 'difusion', 'e⁻ en la base', 'left');
+      TS.tag(c, X(g.ex1) + 8, Y((g.eD + g.bD) / 2), 'difusion', 'e⁻ minoritarios (◯)', 'left');
       if (op.Vbc < 0.4) TS.tag(c, X(g.ex1) + 8, Y(g.bD) + d.cC * 0.35 * H * 0.5 + 6, 'arrastre', 'vaciamiento BC', 'left');
       TS.tag(c, X(0.62), Y((g.epiB + g.blB) / 2) + 16, 'arrastre', 'colector (mayoritarios)');
     }
@@ -443,7 +497,7 @@ TS.BJT = (() => {
   M.frame = dt => {
     if (M.dirty) compute();
     const sdt = dt * st.speed;
-    cE.update(sdt); cB.update(sdt); cC.update(sdt);
+    cE.update(sdt); cB.update(sdt); cC.update(sdt); mB.update(sdt); mE.update(sdt); mC.update(sdt);
     if (st.view === '1d') step1d(sdt); else stepPlanar(sdt);
     for (const fl of flashes) fl.t += sdt;
     flashes = flashes.filter(fl => fl.t < 0.45);
