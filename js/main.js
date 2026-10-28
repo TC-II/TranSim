@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-  const modules = { pn: TS.PN, moscap: TS.MOSCAP, mosfet: TS.MOSFET, bjt: TS.BJT, cmos: TS.CMOS };
+  const modules = { pn: TS.PN, moscap: TS.MOSCAP, mosfet: TS.MOSFET, bjt: TS.BJT };
   const started = {};
   let active = null;
 

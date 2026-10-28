@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TranSim — Simulador de transistores</title>
-  <meta name="description" content="Simulación interactiva de la juntura PN, el MOSFET, el BJT y el inversor CMOS: cortes con portadores en movimiento, curvas características, regiones de operación y diagramas de bandas.">
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <meta name="description" content="Simulación interactiva de la juntura PN, el capacitor MOS, el MOSFET y el BJT: cortes con portadores en movimiento, curvas características, regiones de operación y diagramas de bandas.">
+  <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body>
 <header class="top">
@@ -15,7 +15,6 @@
     <button data-tab="moscap">Capacitor MOS</button>
     <button data-tab="mosfet">MOSFET</button>
     <button data-tab="bjt">BJT</button>
-    <button data-tab="cmos">Inversor CMOS</button>
   </nav>
   <div class="legend-bar">
     <span><i style="background:var(--electron)"></i>electrones</span>
@@ -224,64 +223,15 @@ I_B = (I_S/β_F)(e^(V_BE/U_T) − 1) + (I_S/β_R)(e^(V_BC/U_T) − 1)</span>
   </div>
 </section>
 
-<!-- ============================================================ CMOS -->
-<section class="tab" id="tab-cmos">
-  <aside class="controls">
-    <h2>Inversor CMOS</h2>
-    <p class="sub">NMOS en sustrato p + PMOS en pozo n. Compuertas unidas a V<sub>in</sub>, drenadores a V<sub>out</sub>.</p>
-    <div class="ctrl"><label>Modo</label>
-      <select data-key="mode"><option value="static">Estático (barrido DC)</option><option value="square">Dinámico: onda cuadrada</option><option value="sine">Dinámico: senoidal</option></select></div>
-    <div class="ctrl" id="cmos-vin-ctrl"><label>V<sub>in</sub> <b data-out="Vin"></b></label>
-      <input type="range" data-key="Vin" min="0" max="5" step="0.01" data-unit="V"></div>
-    <div class="ctrl"><label>V<sub>DD</sub> <b data-out="VDD"></b></label>
-      <input type="range" data-key="VDD" min="1.2" max="5" step="0.05" data-unit="V"></div>
-    <div class="ctrl"><label>(W/L)<sub>p</sub> / (W/L)<sub>n</sub> <b data-out="ratio"></b></label>
-      <input type="range" data-key="ratio" min="0.5" max="6" step="0.1" data-fmt="1"></div>
-    <div class="ctrl"><label>Frecuencia (tiempo ralentizado) <b data-out="freq"></b></label>
-      <input type="range" data-key="freq" min="0.05" max="1" step="0.01" data-unit="Hz"></div>
-    <div class="ctrl"><label>Carga C<sub>L</sub> (relativa) <b data-out="CL"></b></label>
-      <input type="range" data-key="CL" min="0.2" max="4" step="0.1" data-fmt="1"></div>
-    <div class="ctrl"><label>Velocidad de animación <b data-out="speed"></b></label>
-      <input type="range" data-key="speed" min="0.1" max="3" step="0.1" data-fmt="1" data-unit="×"></div>
-    <span class="region-badge" id="cmos-badge"></span>
-    <h3>Punto de operación</h3>
-    <table class="readout" id="cmos-read"></table>
-    <h3>Teoría</h3>
-    <div class="theory">
-      <span class="eq">I_Dn(V_in, V_out) = I_Dp(V_DD − V_in, V_DD − V_out)
-NM_H = V_OH − V_IH,  NM_L = V_IL − V_OL
-(dV_out/dV_in = −1 en V_IL y V_IH)</span>
-      <ul>
-        <li>En reposo siempre hay un transistor cortado: <b>no hay consumo estático</b>.</li>
-        <li>Sólo cerca de V<sub>M</sub> ambos conducen y circula corriente de cortocircuito.</li>
-        <li>En modo dinámico el PMOS carga C<sub>L</sub> (huecos) y el NMOS la descarga (electrones).</li>
-        <li>Aumentar (W/L)<sub>p</sub> mueve V<sub>M</sub> hacia V<sub>DD</sub>.</li>
-      </ul>
-    </div>
-  </aside>
-  <div class="viz">
-    <div class="card"><div class="card-title">Corte transversal del inversor <small>pozo n polarizado a V<sub>DD</sub>, sustrato p a GND</small></div>
-      <canvas class="xsec" id="cmos-xsec" style="height:420px"></canvas></div>
-    <div class="grid2">
-      <div class="card"><div class="card-title">Transferencia V<sub>out</sub>–V<sub>in</sub> (regiones de operación)</div><canvas class="plot" id="cmos-vtc"></canvas></div>
-      <div class="card"><div class="card-title">Rectas de carga: I<sub>Dn</sub> e I<sub>Dp</sub> vs V<sub>out</sub></div><canvas class="plot" id="cmos-load"></canvas></div>
-      <div class="card"><div class="card-title" id="cmos-third-title">Corriente de alimentación vs V<sub>in</sub></div><canvas class="plot" id="cmos-cur"></canvas></div>
-      <div class="card"><div class="card-title">Bandas bajo las compuertas (NMOS | PMOS)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><canvas class="plot" id="cmos-bandn"></canvas><canvas class="plot" id="cmos-bandp"></canvas></div></div>
-    </div>
-  </div>
-</section>
-
 </main>
 <footer>TranSim · Teoría de Circuitos II · modelos didácticos (EKV, Ebers–Moll, aproximación de vaciamiento). <a href="https://github.com/TC-II/TranSim">Código fuente</a></footer>
 
-<script src="js/common.js?v=10"></script>
-<script src="js/mosband.js?v=10"></script>
-<script src="js/pn.js?v=10"></script>
-<script src="js/moscap.js?v=10"></script>
-<script src="js/mosfet.js?v=10"></script>
-<script src="js/bjt.js?v=10"></script>
-<script src="js/cmos.js?v=10"></script>
-<script src="js/main.js?v=10"></script>
+<script src="js/common.js?v=11"></script>
+<script src="js/mosband.js?v=11"></script>
+<script src="js/pn.js?v=11"></script>
+<script src="js/moscap.js?v=11"></script>
+<script src="js/mosfet.js?v=11"></script>
+<script src="js/bjt.js?v=11"></script>
+<script src="js/main.js?v=11"></script>
 </body>
 </html>
