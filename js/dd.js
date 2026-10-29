@@ -19,6 +19,10 @@ TS.DD = (() => {
   const r = TS.rng(5);
   let xsec, pConc, pCur, pBand, pVel;
   const parts = { n: [], p: [] }, rate = { n: 0, p: 0 };
+  // flujo neto: cruces por el centro en una ventana deslizante de WIN s (se reinicia al mover un control)
+  const WIN = 8, log = { n: [], p: [] };
+  let tNow = 0, tReset = 0, tShow = 0;
+  const resetFlux = () => { log.n = []; log.p = []; tReset = tNow; tShow = 0; };
   let tracer = null, trail = [];
   const NB = 20, hist = { n: new Array(NB).fill(1), p: new Array(NB).fill(1) };
 
@@ -53,12 +57,13 @@ TS.DD = (() => {
     xsec = new TS.Surface($('dd-xsec'));
     pConc = new TS.Plot($('dd-conc')); pCur = new TS.Plot($('dd-cur'));
     pBand = new TS.Plot($('dd-band')); pVel = new TS.Plot($('dd-vel'));
-    TS.bindControls($('tab-dd'), st, () => { M.dirty = true; });
+    TS.bindControls($('tab-dd'), st, k => { M.dirty = true; if (k !== 'speed') resetFlux(); });
     $('dd-balance').addEventListener('click', () => {
       // campo que cancela exactamente la difusión: n ∝ e^(Pe·u) con Pe = ln(n(L)/n(0))
       const [a, b] = ends(), k = st.car === 'p' ? 'p' : 'n';
       if (st.car === 'both') { st.car = 'n'; $('tab-dd').querySelector('[data-key="car"]')._refresh(); }
       st.E = +(Math.log(b / a) * UT / (SP[k].sgn * 1e3 * L)).toFixed(3);
+      resetFlux();
       $('tab-dd').querySelector('[data-key="E"]')._refresh();
       M.dirty = true;
     });
@@ -77,6 +82,12 @@ TS.DD = (() => {
 
   function step(dt) {
     dt = Math.min(dt, 0.04);
+    tNow += dt;
+    if (tNow - tShow > 0.5) {                     // el número se refresca dos veces por segundo
+      tShow = tNow;
+      const span = Math.max(1, Math.min(WIN, tNow - tReset));
+      for (const k of ['n', 'p']) rate[k] = log[k].reduce((a, [, c]) => a + c, 0) / span;
+    }
     const [a, b] = ends();
     for (const k of ['n', 'p']) {
       const P = parts[k];
@@ -86,7 +97,8 @@ TS.DD = (() => {
         walk(k, p, dt);
         if (u0 < 0.5 && p.u >= 0.5) cross++; else if (u0 >= 0.5 && p.u < 0.5) cross--;
       }
-      rate[k] += (cross / dt - rate[k]) * Math.min(1, dt / 2.5);
+      if (cross) log[k].push([tNow, cross]);
+      while (log[k].length && log[k][0][0] < tNow - WIN) log[k].shift();
       // reservorios: se fija la cantidad de partículas en cada contacto (concentración de borde)
       let out = P.filter(p => p.u >= -RES && p.u <= 1 + RES);
       for (const [lo, hi, c] of [[-RES, 0, a], [1, 1 + RES, b]]) {
