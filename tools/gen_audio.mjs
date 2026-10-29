@@ -23,6 +23,7 @@ const OUT = new URL('audio/', ROOT).pathname;
 const PY = process.env.CHATTERBOX_PY || join(homedir(), '.local/share/chatterbox/venv/bin/python');
 const REF = process.env.VOICE_REF || join(homedir(), '.local/share/chatterbox/voz.wav');
 const TEMPO = 1.25;                               // aceleración final de la voz (sin cambiar el tono)
+const POST = 'recorte-whisper-2';                 // cambiar si cambia el posproceso, para regenerar todo
 const args = process.argv.slice(2), all = args.includes('--all'), only = args.filter(a => !a.startsWith('--'));
 
 const steps = loadChapters(ROOT).flatMap(c => c.steps.map((s, i) => ({ id: `${c.tab}-${i + 1}` })));
@@ -41,7 +42,7 @@ const tmp = join(tmpdir(), `transim-tts-${process.pid}`);
 mkdirSync(tmp, { recursive: true });
 
 const todo = steps.filter(s => {
-  s.hash = createHash('sha1').update(refHash + TEMPO + '\n' + s.say).digest('hex').slice(0, 12);
+  s.hash = createHash('sha1').update(refHash + TEMPO + POST + '\n' + s.say).digest('hex').slice(0, 12);
   if (only.length) return only.includes(s.id);
   return all || manifest[s.id]?.hash !== s.hash || !existsSync(join(OUT, s.id + '.mp3'));
 });
@@ -52,7 +53,7 @@ if (todo.length) {
   execFileSync(PY, [new URL('tts_chatterbox.py', import.meta.url).pathname, join(tmp, 'jobs.json'), REF], { stdio: ['ignore', 'inherit', 'ignore'] });
   for (const s of todo) {
     const mp3 = join(OUT, s.id + '.mp3');
-    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', join(tmp, s.id + '.wav'), '-af', `atempo=${TEMPO},loudnorm=I=-18:TP=-1.5`, '-ar', '24000', '-ac', '1', '-codec:a', 'libmp3lame', '-b:a', '64k', mp3]);
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', join(tmp, s.id + '.wav'), '-af', `afftdn=nf=-30,atempo=${TEMPO},loudnorm=I=-18:TP=-1.5`, '-ar', '24000', '-ac', '1', '-codec:a', 'libmp3lame', '-b:a', '64k', mp3]);
     const dur = +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', mp3]).toString().trim();
     manifest[s.id] = { hash: s.hash, dur: Math.round(dur * 10) / 10 };
   }
