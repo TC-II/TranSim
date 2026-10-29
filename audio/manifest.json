@@ -1,158 +1,190 @@
 {
  "pn-1": {
-  "hash": "c41d9399abde",
-  "dur": 28.3
+  "hash": "45214986e950",
+  "dur": 44.1
  },
  "pn-2": {
-  "hash": "01cc89f87bcb",
-  "dur": 25.4
+  "hash": "55928eb9c86f",
+  "dur": 38.6
  },
  "pn-3": {
-  "hash": "08709be808fd",
-  "dur": 22.3
+  "hash": "55ea3787e6f1",
+  "dur": 35.3
  },
  "pn-4": {
-  "hash": "30ede080367e",
-  "dur": 20
+  "hash": "5a090cd1cfd6",
+  "dur": 33.9
  },
  "pn-5": {
-  "hash": "9493b9fbf3fc",
-  "dur": 15.4
+  "hash": "6fa6b2658791",
+  "dur": 25.6
  },
  "pn-6": {
-  "hash": "0b69e3ca7dc5",
-  "dur": 21.9
+  "hash": "8f86409fc47d",
+  "dur": 29.9
  },
  "pn-7": {
-  "hash": "05a78bd24fc5",
-  "dur": 17.7
+  "hash": "21e79290d505",
+  "dur": 25.1
  },
  "pn-8": {
-  "hash": "70dfba3bb98d",
-  "dur": 13.4
+  "hash": "2f52e6dd8c8b",
+  "dur": 24.6
  },
  "pn-9": {
-  "hash": "b807271a3022",
-  "dur": 21
+  "hash": "acd5829a860b",
+  "dur": 27
  },
  "moscap-1": {
-  "hash": "a9c55de1587f",
-  "dur": 23.1
+  "hash": "9f658fede1d7",
+  "dur": 30.3
  },
  "moscap-2": {
-  "hash": "f3fb352be0c6",
-  "dur": 21.8
+  "hash": "a903fe3c2325",
+  "dur": 25.9
  },
  "moscap-3": {
-  "hash": "bd2cb051ecb4",
-  "dur": 20.5
+  "hash": "8c9e642cb437",
+  "dur": 30.6
  },
  "moscap-4": {
-  "hash": "4f20e80a0cca",
-  "dur": 17.2
+  "hash": "0917acfe143a",
+  "dur": 30
  },
  "moscap-5": {
-  "hash": "5865ad207dce",
-  "dur": 20.2
+  "hash": "84caea7f76de",
+  "dur": 37.7
  },
  "moscap-6": {
-  "hash": "f9d687f0942b",
-  "dur": 23.4
+  "hash": "eaa22c6ea488",
+  "dur": 39.4
  },
  "moscap-7": {
-  "hash": "945d8138e375",
-  "dur": 20.6
+  "hash": "f5869a0aba2f",
+  "dur": 32.9
  },
  "moscap-8": {
-  "hash": "0d764acfa2da",
-  "dur": 13
- },
- "moscap-9": {
-  "hash": "afefa668789d",
-  "dur": 13.8
- },
- "moscap-10": {
-  "hash": "b9d601e2fed6",
-  "dur": 17
- },
- "mosfet-1": {
-  "hash": "46f0bb40db0a",
+  "hash": "98bfe23c5f37",
   "dur": 21
  },
+ "moscap-9": {
+  "hash": "e979cee1b8fc",
+  "dur": 23.4
+ },
+ "moscap-10": {
+  "hash": "3dc3a9f37f6b",
+  "dur": 25.7
+ },
+ "mosfet-1": {
+  "hash": "ce0d1fe32cae",
+  "dur": 25.4
+ },
  "mosfet-2": {
-  "hash": "4647599e22a1",
-  "dur": 15.7
+  "hash": "2986cd00926f",
+  "dur": 23.1
  },
  "mosfet-3": {
-  "hash": "1241abc3c507",
-  "dur": 22.5
+  "hash": "0e1820c675d3",
+  "dur": 34.9
  },
  "mosfet-4": {
-  "hash": "e5e024e85c8e",
-  "dur": 17.4
+  "hash": "32c2752d9204",
+  "dur": 24.8
  },
  "mosfet-5": {
-  "hash": "998043655129",
-  "dur": 13
+  "hash": "ff4da62e13fb",
+  "dur": 16.7
  },
  "mosfet-6": {
-  "hash": "80d2e7254ca0",
-  "dur": 26.2
+  "hash": "3c73e4f1a239",
+  "dur": 27.3
  },
  "mosfet-7": {
-  "hash": "96c8c14e5c8e",
-  "dur": 14.8
+  "hash": "d2a36a7caaa4",
+  "dur": 23.7
  },
  "mosfet-8": {
-  "hash": "6efc3d988f56",
-  "dur": 16.6
+  "hash": "3c1fcb2f9d4d",
+  "dur": 16.7
  },
  "mosfet-9": {
-  "hash": "3d3130a65b5d",
-  "dur": 17.4
+  "hash": "9f76b2a0d1ea",
+  "dur": 16.9
  },
  "bjt-1": {
-  "hash": "ec436337b4c1",
-  "dur": 15.6
+  "hash": "c3f43c461d9a",
+  "dur": 22.1
  },
  "bjt-2": {
-  "hash": "917d94e85fe4",
-  "dur": 21.6
+  "hash": "7212bb0f67a5",
+  "dur": 32.6
  },
  "bjt-3": {
-  "hash": "10adb7249872",
-  "dur": 18.4
+  "hash": "2e8aec07dcec",
+  "dur": 30.7
  },
  "bjt-4": {
-  "hash": "5bf5e7052a0d",
-  "dur": 19.9
+  "hash": "92e0dbae3f4d",
+  "dur": 23.5
  },
  "bjt-5": {
-  "hash": "0230de93ada8",
-  "dur": 22.5
+  "hash": "ca42de818484",
+  "dur": 35.1
  },
  "bjt-6": {
-  "hash": "1fcd3cb94ad5",
-  "dur": 15.7
+  "hash": "5326bc3698d0",
+  "dur": 22.4
  },
  "bjt-7": {
-  "hash": "cf12b3a4f607",
-  "dur": 11.5
+  "hash": "86fe0fb5f12a",
+  "dur": 20.5
  },
  "bjt-8": {
-  "hash": "0730a9409bc6",
-  "dur": 14.4
+  "hash": "d2aee77d94bb",
+  "dur": 26.4
  },
  "bjt-9": {
-  "hash": "2480efab9d25",
-  "dur": 18.7
+  "hash": "d079adf45fc1",
+  "dur": 30.9
  },
  "bjt-10": {
-  "hash": "6609540171d2",
-  "dur": 17.5
+  "hash": "75033e3ae3d7",
+  "dur": 23.2
  },
  "bjt-11": {
-  "hash": "56d3a896c9ee",
-  "dur": 22.2
+  "hash": "f7d44af4f1ee",
+  "dur": 30.2
+ },
+ "dd-1": {
+  "hash": "a107bcd381aa",
+  "dur": 33.4
+ },
+ "dd-2": {
+  "hash": "8c445320b1dd",
+  "dur": 25.8
+ },
+ "dd-3": {
+  "hash": "6036d09f0c12",
+  "dur": 25.3
+ },
+ "dd-4": {
+  "hash": "a08e74b74e1c",
+  "dur": 22.5
+ },
+ "dd-5": {
+  "hash": "00e8b213b906",
+  "dur": 27.4
+ },
+ "dd-6": {
+  "hash": "21313093e4b6",
+  "dur": 25.1
+ },
+ "dd-7": {
+  "hash": "160e548e0e96",
+  "dur": 22.1
+ },
+ "dd-8": {
+  "hash": "adbc07545b7a",
+  "dur": 28.8
  }
 }

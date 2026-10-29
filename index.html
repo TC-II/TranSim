@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TranSim — Simulador de transistores</title>
   <meta name="description" content="Simulación interactiva de la juntura PN, el capacitor MOS, el MOSFET y el BJT: cortes con portadores en movimiento, curvas características, regiones de operación y diagramas de bandas.">
-  <link rel="stylesheet" href="css/style.css?v=18">
+  <link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body>
 <header class="top">
   <h1>Tran<span>Sim</span></h1>
   <nav class="tabs">
+    <button data-tab="dd">Arrastre y difusión</button>
     <button data-tab="pn">Juntura PN</button>
     <button data-tab="moscap">Capacitor MOS</button>
     <button data-tab="mosfet">MOSFET</button>
@@ -30,6 +31,49 @@
 </header>
 
 <main>
+
+<!-- ============================================================ ARRASTRE Y DIFUSIÓN -->
+<section class="tab" id="tab-dd">
+  <aside class="controls">
+    <h2>Arrastre y difusión</h2>
+    <p class="sub">Barra de Si uniforme de 2 µm. Los contactos fijan la concentración en cada extremo (N₀ = 10¹⁶ cm⁻³).</p>
+    <div class="ctrl"><label>Campo eléctrico E <b data-out="E"></b></label>
+      <input type="range" data-key="E" min="-2" max="2" step="0.001" data-unit="kV/cm"></div>
+    <div class="ctrl"><label>Gradiente de concentración <b data-out="g"></b></label>
+      <input type="range" data-key="g" min="0" max="0.9" step="0.01"></div>
+    <div class="ctrl"><label>Portadores</label>
+      <select data-key="car"><option value="n">Electrones</option><option value="p">Huecos</option><option value="both">Ambos</option></select></div>
+    <div class="btn-row"><button id="dd-balance" title="Fija el campo que cancela exactamente la difusión">Equilibrar: arrastre = −difusión</button></div>
+    <div class="ctrl"><label>Velocidad de animación <b data-out="speed"></b></label>
+      <input type="range" data-key="speed" min="0.1" max="3" step="0.1" data-fmt="1" data-unit="×"></div>
+    <span class="region-badge" id="dd-badge"></span>
+    <h3>Valores (en x = L/2)</h3>
+    <table class="readout" id="dd-read"></table>
+    <h3>Teoría</h3>
+    <div class="theory">
+      <span class="eq">Arrastre:  J = q n µ E      (e⁻ y h⁺ suman)
+Difusión:  J_n = +q D_n dn/dx
+           J_p = −q D_p dp/dx
+Einstein:  D/µ = kT/q ≈ 25,9 mV</span>
+      <ul>
+        <li><b>Agitación térmica</b>: cada portador se mueve al azar a ~10⁷ cm/s, pero en promedio no va a ningún lado.</li>
+        <li><b>Arrastre</b>: el campo agrega una pequeña velocidad neta v = µE. Los electrones van contra E y los huecos a favor, pero como tienen carga opuesta, sus corrientes tienen el mismo sentido.</li>
+        <li><b>Difusión</b>: no hace falta fuerza. Si hay más portadores de un lado, por pura estadística cruzan más hacia donde hay menos.</li>
+        <li><b>Equilibrio</b>: un campo puede cancelar exactamente a la difusión. Entonces n ∝ e^(ψ/U_T) y el nivel de Fermi es plano: es lo que pasa en la juntura PN.</li>
+      </ul>
+    </div>
+  </aside>
+  <div class="viz">
+    <div class="card"><div class="card-title">Barra de silicio <small>trazo blanco = trayectoria de un portador · flechas = flujo neto medido en el centro</small></div>
+      <canvas class="xsec" id="dd-xsec" style="height:300px"></canvas></div>
+    <div class="grid2">
+      <div class="card"><div class="card-title">Concentración n(x), p(x)</div><canvas class="plot" id="dd-conc"></canvas></div>
+      <div class="card"><div class="card-title">Componentes de corriente</div><canvas class="plot" id="dd-cur"></canvas></div>
+      <div class="card"><div class="card-title">Diagrama de bandas</div><canvas class="plot" id="dd-band"></canvas></div>
+      <div class="card"><div class="card-title">Velocidad de arrastre vs campo</div><canvas class="plot" id="dd-vel"></canvas></div>
+    </div>
+  </div>
+</section>
 
 <!-- ============================================================ PN -->
 <section class="tab" id="tab-pn">
@@ -231,13 +275,14 @@ I_B = (I_S/β_F)(e^(V_BE/U_T) − 1) + (I_S/β_R)(e^(V_BC/U_T) − 1)</span>
 </main>
 <footer>TranSim · Teoría de Circuitos II · modelos didácticos (EKV, Ebers–Moll, aproximación de vaciamiento). <a href="https://github.com/TC-II/TranSim">Código fuente</a></footer>
 
-<script src="js/common.js?v=18"></script>
-<script src="js/mosband.js?v=18"></script>
-<script src="js/pn.js?v=18"></script>
-<script src="js/moscap.js?v=18"></script>
-<script src="js/mosfet.js?v=18"></script>
-<script src="js/bjt.js?v=18"></script>
-<script src="js/main.js?v=18"></script>
-<script src="js/tour.js?v=18"></script>
+<script src="js/common.js?v=19"></script>
+<script src="js/mosband.js?v=19"></script>
+<script src="js/dd.js?v=19"></script>
+<script src="js/pn.js?v=19"></script>
+<script src="js/moscap.js?v=19"></script>
+<script src="js/mosfet.js?v=19"></script>
+<script src="js/bjt.js?v=19"></script>
+<script src="js/main.js?v=19"></script>
+<script src="js/tour.js?v=19"></script>
 </body>
 </html>

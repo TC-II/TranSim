@@ -146,6 +146,13 @@ TS.PN = (() => {
   function step(dt) {
     const Va = st.Va, g = geom(Va), I = current(Va);
     const uP = toU(-g.xp), uN = toU(g.xn);
+    // en directa los mayoritarios avanzan por arrastre desde los contactos hasta la zona de
+    // vaciamiento, donde se consumen (recombinación con los inyectados): llevan la corriente lejos de la juntura
+    if (Va > 0.05) {
+      const vm = 0.05 * clamp(Math.log10(Math.max(I, 1e-14) / 1e-12) / 10, 0, 1) * dt * st.speed;
+      for (const p of holes.p) if (p.bx < uP) { p.bx += vm; if (p.bx >= uP - 0.004) p.bx = 0.004; }
+      for (const p of elecs.p) if (p.bx > uN) { p.bx -= vm; if (p.bx <= uN + 0.004) p.bx = 0.996; }
+    }
     holes.update(dt); elecs.update(dt);
     // inyección en directa
     const R = TS.visRate(I, 1e-12, 1e-2, 70);

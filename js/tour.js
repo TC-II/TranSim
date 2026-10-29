@@ -4,6 +4,60 @@
 TS.TOUR = (() => {
   const CHAPTERS = [
     {
+      tab: 'dd', name: 'Arrastre y difusión',
+      reset: { E: 0, g: 0, car: 'n', speed: 1 },
+      steps: [
+        {
+          title: 'Agitación térmica', focus: 'dd-xsec', set: { E: 0, g: 0, car: 'n' },
+          text: `A temperatura ambiente los portadores nunca están quietos: chocan con la red y salen en direcciones al azar a unos 10⁷ cm/s.
+            El trazo blanco sigue a <b>un</b> electrón: zigzaguea sin rumbo. Si la concentración es uniforme y no hay campo,
+            cruzan tantos hacia la derecha como hacia la izquierda: el <b>flujo neto es cero</b> y no hay corriente.`,
+        },
+        {
+          title: 'Arrastre: el campo empuja', focus: 'dd-xsec', set: { E: 1 },
+          text: `Al aplicar un campo E, sobre el zigzag aparece una pequeña <b>velocidad neta</b> v = µE: eso es el <b>arrastre</b>.
+            Los electrones, con carga negativa, derivan <b>contra</b> el campo. Mirá cómo el trazo se corre hacia la izquierda y el flujo neto deja de ser cero.
+            La corriente de arrastre es J = qnµE: proporcional a la concentración y al campo (ley de Ohm).`,
+        },
+        {
+          title: 'Electrones y huecos suman', focus: 'dd-cur', set: { car: 'both' },
+          text: `Los huecos derivan <b>a favor</b> del campo, al revés que los electrones. Pero como tienen carga opuesta, las dos corrientes de
+            arrastre tienen el <b>mismo sentido</b>, el de E, y se suman. En las bandas inclinadas se ve lo mismo:
+            los electrones "ruedan" hacia abajo y los huecos "flotan" hacia arriba.`,
+        },
+        {
+          title: 'Movilidad', focus: 'dd-vel', set: {},
+          text: `La <b>movilidad</b> µ mide qué tan fácil es arrastrar a un portador. En Si los electrones (1350 cm²/Vs) son unas tres veces más
+            móviles que los huecos (480): por eso los NMOS y los NPN son más rápidos. Con campos muy grandes la velocidad deja de crecer
+            y <b>satura</b> cerca de 10⁷ cm/s, la misma escala que la velocidad térmica.`,
+        },
+        {
+          title: 'Difusión: estadística pura', focus: 'dd-xsec', set: { E: 0, g: 0.8, car: 'n' },
+          text: `Ahora sin campo pero con un <b>gradiente</b>: el contacto izquierdo mantiene muchos electrones y el derecho pocos.
+            Ninguna fuerza los empuja; cada uno sigue zigzagueando al azar. Pero como a la izquierda hay más, cruzan más hacia la derecha que al revés.
+            Ese flujo neto, de mayor a menor concentración, es la <b>difusión</b>.`,
+        },
+        {
+          title: 'Corriente de difusión', focus: 'dd-cur', set: { car: 'both' },
+          text: `El flujo de difusión es proporcional al gradiente: F = −D·dn/dx. Electrones y huecos difunden <b>en el mismo sentido</b> (hacia donde hay menos),
+            pero por su carga opuesta sus corrientes tienen <b>signos contrarios</b>: J<sub>n</sub> = +qD<sub>n</sub>dn/dx y J<sub>p</sub> = −qD<sub>p</sub>dp/dx.
+            El perfil lineal hace que la corriente de difusión sea constante a lo largo de la barra.`,
+        },
+        {
+          title: 'Relación de Einstein', focus: 'dd-vel', set: {},
+          text: `Arrastre y difusión no son independientes: los dos salen del mismo movimiento térmico y de los mismos choques.
+            Por eso <b>D/µ = kT/q ≈ 25,9 mV</b>. Un portador muy móvil también difunde rápido: D<sub>n</sub> ≈ 35 cm²/s y D<sub>p</sub> ≈ 12 cm²/s.`,
+        },
+        {
+          title: 'Arrastre contra difusión', focus: 'dd-band', set: { car: 'n', g: 0.8, E: 0.284 },
+          text: `Último experimento: un gradiente que empuja a los electrones hacia la derecha y un campo que los arrastra hacia la izquierda.
+            Con el campo justo, las dos corrientes se <b>cancelan exactamente</b>: los portadores siguen moviéndose, pero el flujo neto es cero.
+            En ese caso el perfil es exponencial, n ∝ e<sup>ψ/U<sub>T</sub></sup>, y el <b>nivel de Fermi queda plano</b>.
+            Esto es exactamente lo que pasa en una juntura PN en equilibrio: lo vemos a continuación.`,
+        },
+      ],
+    },
+    {
       tab: 'pn', name: 'Juntura PN',
       reset: { Va: 0, logI: true, speed: 1 },
       steps: [
@@ -258,6 +312,9 @@ TS.TOUR = (() => {
   const save = (k, v) => { try { localStorage.setItem('tour-' + k, v ? '1' : '0'); } catch { /* sin storage */ } };
   let sound = pref('sound', true), auto = pref('auto', false), advTimer = null, manifest = null;
   const voice = new Audio();
+  let rate = 1;
+  try { rate = +localStorage.getItem('tour-rate') || 1; } catch { /* sin storage */ }
+  voice.defaultPlaybackRate = voice.playbackRate = rate;
   voice.preload = 'auto';
   fetch('audio/manifest.json').then(r => r.json()).then(m => { manifest = m; }).catch(() => { manifest = {}; });
 
@@ -269,6 +326,7 @@ TS.TOUR = (() => {
     const id = stepId(), h = manifest?.[id]?.hash;
     voice.src = `audio/${id}.mp3${h ? '?h=' + h : ''}`;
     voice.currentTime = 0;
+    voice.playbackRate = rate;
     voice.play().catch(() => { /* bloqueado por el navegador o sin archivo */ });
   }
   voice.addEventListener('ended', () => {
@@ -375,6 +433,7 @@ TS.TOUR = (() => {
       <div class="tour-audio">
         <button class="tour-snd" title="Narración en voz alta (N)">🔊</button>
         <div class="tour-abar"><i></i></div>
+        <select class="tour-rate" title="Velocidad de la voz">${[1, 1.25, 1.5].map(r => `<option value="${r}">${String(r).replace('.', ',')}×</option>`).join('')}</select>
         <label class="tour-auto" title="Pasar solo al siguiente paso cuando termina el audio"><input type="checkbox"> avance automático</label>
       </div>
       <h3 class="tour-title"></h3>
@@ -392,6 +451,13 @@ TS.TOUR = (() => {
     panel.querySelector('.tour-close').onclick = stop;
     panel.querySelector('.tour-replay').onclick = () => apply();
     panel.querySelector('.tour-snd').onclick = () => setSound(!sound);
+    const rateSel = panel.querySelector('.tour-rate');
+    rateSel.value = String(rate);
+    rateSel.onchange = () => {
+      rate = +rateSel.value;
+      voice.defaultPlaybackRate = voice.playbackRate = rate;
+      try { localStorage.setItem('tour-rate', rate); } catch { /* sin storage */ }
+    };
     const autoBox = panel.querySelector('.tour-auto input');
     autoBox.checked = auto;
     autoBox.onchange = () => { auto = autoBox.checked; save('auto', auto); if (auto && voice.ended) next(); };
